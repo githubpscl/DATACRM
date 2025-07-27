@@ -1,0 +1,32 @@
+.env.local
+.env
+*.log
+node_modules/
+.next/
+dist/
+build/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+.vscode/
+!.vscode/tasks.json
+
+# Database
+*.db
+*.sqlite
+
+# Production
+.vercel
+.netlify
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+*.log
+
+# Secrets
+.env*.local

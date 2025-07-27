@@ -1,0 +1,426 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  password        String
+  firstName       String?
+  lastName        String?
+  role            UserRole  @default(USER)
+  companyId       String?
+  company         Company?  @relation(fields: [companyId], references: [id])
+  isActive        Boolean   @default(true)
+  lastLoginAt     DateTime?
+  emailVerified   Boolean   @default(false)
+  emailVerifiedAt DateTime?
+  resetToken      String?
+  resetTokenExpiry DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  createdCampaigns Campaign[]   @relation("CampaignCreator")
+  journeys         Journey[]
+  segments         Segment[]
+  auditLogs        AuditLog[]
+  dataImports      DataImport[]
+
+  @@map("users")
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  name        String
+  domain      String?  @unique
+  industry    String?
+  size        String?
+  logo        String?
+  website     String?
+  address     String?
+  phone       String?
+  timezone    String   @default("UTC")
+  currency    String   @default("EUR")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       User[]
+  customers   Customer[]
+  campaigns   Campaign[]
+  journeys    Journey[]
+  segments    Segment[]
+  templates   Template[]
+  apiKeys     ApiKey[]
+  dataImports DataImport[]
+
+  @@map("companies")
+}
+
+model Customer {
+  id           String                @id @default(uuid())
+  email        String
+  firstName    String?
+  lastName     String?
+  phone        String?
+  address      String?
+  city         String?
+  country      String?
+  zipCode      String?
+  birthDate    DateTime?
+  gender       String?
+  companyId    String
+  company      Company               @relation(fields: [companyId], references: [id])
+  tags         String[]
+  customFields Json?
+  source       DataSource            @default(MANUAL)
+  status       CustomerStatus        @default(ACTIVE)
+  leadScore    Int                   @default(0)
+  lastActivity DateTime?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  // Relations
+  segments          CustomerSegment[]
+  campaignDeliveries CampaignDelivery[]
+  journeySteps      JourneyStep[]
+  activities        CustomerActivity[]
+
+  @@unique([email, companyId])
+  @@map("customers")
+}
+
+model Segment {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  conditions  Json      // AI-generated or manual conditions
+  color       String    @default("#3B82F6")
+  companyId   String
+  company     Company   @relation(fields: [companyId], references: [id])
+  createdBy   String
+  creator     User      @relation(fields: [createdBy], references: [id])
+  isActive    Boolean   @default(true)
+  aiGenerated Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  customers CustomerSegment[]
+  campaigns Campaign[]
+
+  @@map("segments")
+}
+
+model CustomerSegment {
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  segmentId  String
+  segment    Segment  @relation(fields: [segmentId], references: [id])
+  addedAt    DateTime @default(now())
+
+  @@id([customerId, segmentId])
+  @@map("customer_segments")
+}
+
+model Campaign {
+  id           String         @id @default(uuid())
+  name         String
+  description  String?
+  type         CampaignType
+  status       CampaignStatus @default(DRAFT)
+  companyId    String
+  company      Company        @relation(fields: [companyId], references: [id])
+  createdBy    String
+  creator      User           @relation("CampaignCreator", fields: [createdBy], references: [id])
+  templateId   String?
+  template     Template?      @relation(fields: [templateId], references: [id])
+  segmentId    String?
+  segment      Segment?       @relation(fields: [segmentId], references: [id])
+  
+  // Campaign Settings
+  subject      String?
+  content      String?
+  scheduleAt   DateTime?
+  timezone     String         @default("UTC")
+  
+  // AI Features
+  aiGenerated  Boolean        @default(false)
+  aiPrompt     String?
+  
+  // Analytics
+  sentCount    Int            @default(0)
+  openCount    Int            @default(0)
+  clickCount   Int            @default(0)
+  
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  // Relations
+  deliveries   CampaignDelivery[]
+  journeySteps JourneyStep[]
+
+  @@map("campaigns")
+}
+
+model CampaignDelivery {
+  id         String           @id @default(uuid())
+  campaignId String
+  campaign   Campaign         @relation(fields: [campaignId], references: [id])
+  customerId String
+  customer   Customer         @relation(fields: [customerId], references: [id])
+  status     DeliveryStatus   @default(PENDING)
+  sentAt     DateTime?
+  openedAt   DateTime?
+  clickedAt  DateTime?
+  bouncedAt  DateTime?
+  errorMsg   String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@map("campaign_deliveries")
+}
+
+model Journey {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  isActive    Boolean       @default(true)
+  companyId   String
+  company     Company       @relation(fields: [companyId], references: [id])
+  createdBy   String
+  creator     User          @relation(fields: [createdBy], references: [id])
+  trigger     Json          // Entry conditions
+  settings    Json          // Journey configuration
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  steps       JourneyStep[]
+
+  @@map("journeys")
+}
+
+model JourneyStep {
+  id         String         @id @default(uuid())
+  journeyId  String
+  journey    Journey        @relation(fields: [journeyId], references: [id])
+  customerId String
+  customer   Customer       @relation(fields: [customerId], references: [id])
+  stepType   JourneyStepType
+  stepData   Json
+  status     StepStatus     @default(PENDING)
+  campaignId String?
+  campaign   Campaign?      @relation(fields: [campaignId], references: [id])
+  
+  scheduledAt DateTime?
+  executedAt  DateTime?
+  completedAt DateTime?
+  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@map("journey_steps")
+}
+
+model Template {
+  id          String         @id @default(uuid())
+  name        String
+  type        TemplateType
+  subject     String?
+  content     String
+  variables   Json?          // Template variables for personalization
+  thumbnail   String?
+  companyId   String
+  company     Company        @relation(fields: [companyId], references: [id])
+  isPublic    Boolean        @default(false)
+  category    String?
+  tags        String[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Relations
+  campaigns   Campaign[]
+
+  @@map("templates")
+}
+
+model CustomerActivity {
+  id         String       @id @default(uuid())
+  customerId String
+  customer   Customer     @relation(fields: [customerId], references: [id])
+  type       ActivityType
+  title      String
+  description String?
+  metadata   Json?
+  timestamp  DateTime     @default(now())
+  createdAt  DateTime     @default(now())
+
+  @@map("customer_activities")
+}
+
+model ApiKey {
+  id          String   @id @default(uuid())
+  name        String
+  key         String   @unique
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  permissions Json     // API permissions
+  lastUsedAt  DateTime?
+  isActive    Boolean  @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("api_keys")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  resource  String
+  resourceId String?
+  oldValues Json?
+  newValues Json?
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+// Enums
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  USER
+  VIEWER
+}
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+  BOUNCED
+  UNSUBSCRIBED
+  BLOCKED
+}
+
+enum CampaignType {
+  EMAIL
+  SMS
+  WHATSAPP
+  PUSH
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  PAUSED
+  CANCELLED
+}
+
+enum DeliveryStatus {
+  PENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+  UNSUBSCRIBED
+}
+
+enum JourneyStepType {
+  WAIT
+  EMAIL
+  SMS
+  WHATSAPP
+  CONDITION
+  ACTION
+  SPLIT_TEST
+}
+
+enum StepStatus {
+  PENDING
+  EXECUTING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+enum TemplateType {
+  EMAIL
+  SMS
+  WHATSAPP
+  LANDING_PAGE
+}
+
+enum ActivityType {
+  EMAIL_SENT
+  EMAIL_OPENED
+  EMAIL_CLICKED
+  SMS_SENT
+  WHATSAPP_SENT
+  PAGE_VIEWED
+  FORM_SUBMITTED
+  PURCHASE
+  CUSTOM
+}
+
+model DataImport {
+  id               String       @id @default(uuid())
+  fileName         String
+  filePath         String?
+  status           ImportStatus @default(PENDING)
+  processedRecords Int?         @default(0)
+  createdRecords   Int?         @default(0)
+  updatedRecords   Int?         @default(0)
+  duplicateRecords Int?         @default(0)
+  errors           Json?
+  config           Json?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  // Relations
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("data_imports")
+}
+
+enum ImportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum DataSource {
+  MANUAL
+  IMPORT
+  API
+  WEBHOOK
+  FORM
+  WEBSITE
+  REFERRAL
+  SOCIAL
+}

@@ -1,0 +1,5 @@
+Frontend starten: npm run dev
+Backend starten: 	cd backend
+			node src/server.js
+
+Lokal: http://localhost:3000
