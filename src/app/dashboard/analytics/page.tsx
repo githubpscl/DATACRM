@@ -74,10 +74,6 @@ export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d')
   const [refreshing, setRefreshing] = useState(false)
 
-  useEffect(() => {
-    loadAnalytics()
-  }, [timeRange, loadAnalytics])
-
   const loadAnalytics = useCallback(async () => {
     try {
       setLoading(true)
@@ -90,6 +86,10 @@ export default function AnalyticsPage() {
       setLoading(false)
     }
   }, [timeRange])
+
+  useEffect(() => {
+    loadAnalytics()
+  }, [loadAnalytics])
 
   const getMockAnalytics = (): AnalyticsData => ({
     overview: {

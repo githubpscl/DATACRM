@@ -104,14 +104,6 @@ export default function CustomersEnhancedPage() {
   const [loading, setLoading] = useState(true)
   const [aiProcessing, setAiProcessing] = useState(false)
 
-  useEffect(() => {
-    loadCustomerData()
-  }, [loadCustomerData])
-
-  useEffect(() => {
-    filterCustomers()
-  }, [filterCustomers])
-
   const loadCustomerData = useCallback(async () => {
     try {
       // Simulated customer data
@@ -198,7 +190,7 @@ export default function CustomersEnhancedPage() {
       })
 
       // Generate AI recommendations
-      generateAIRecommendations(mockCustomers)
+      generateAIRecommendations()
 
     } catch (error) {
       console.error('Error loading customer data:', error)
@@ -206,6 +198,10 @@ export default function CustomersEnhancedPage() {
       setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    loadCustomerData()
+  }, [loadCustomerData])
 
   const generateAIRecommendations = async () => {
     setAiProcessing(true)
@@ -300,6 +296,10 @@ export default function CustomersEnhancedPage() {
 
     setFilteredCustomers(filtered)
   }, [customers, searchTerm, selectedSegment])
+
+  useEffect(() => {
+    filterCustomers()
+  }, [filterCustomers])
 
   const getStatusColor = (status: string) => {
     switch (status) {

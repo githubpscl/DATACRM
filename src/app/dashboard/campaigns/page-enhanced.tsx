@@ -121,10 +121,6 @@ export default function CampaignsEnhancedPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
 
-  useEffect(() => {
-    loadCampaignData()
-  }, [loadCampaignData])
-
   const loadCampaignData = useCallback(async () => {
     try {
       // Simulated campaign data
@@ -265,6 +261,10 @@ export default function CampaignsEnhancedPage() {
       setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    loadCampaignData()
+  }, [loadCampaignData])
 
   const generateAIRecommendations = async () => {
     setAiProcessing(true)
