@@ -8,6 +8,32 @@ const nextConfig = {
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
+  // Exclude backend files from TypeScript compilation
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  // Exclude backend directory
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
+  experimental: {
+    esmExternals: 'loose',
+  },
+  webpack: (config, { isServer }) => {
+    // Ignore backend files during webpack compilation
+    config.module.rules.push({
+      test: /backend\/.*\.(ts|tsx|js|jsx)$/,
+      loader: 'ignore-loader'
+    });
+    
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
+  },
 };
 
 module.exports = nextConfig;
