@@ -19,9 +19,18 @@ try {
 }
 
 // AI-powered customer segmentation
-router.post('/segment-customers', requireCompanyAccess, async (req: AuthRequest, res) => {
+router.post('/segment-customers', requireCompanyAccess, async (req: AuthRequest, res): Promise<void> => {
   try {
     const { criteria, name } = req.body;
+
+    // Check if OpenAI is configured
+    if (!openai) {
+      res.status(503).json({ 
+        error: 'AI service not available',
+        message: 'OpenAI API key not configured'
+      });
+      return;
+    }
 
     // Get all customers for the company
     const customers = await prisma.customer.findMany({
@@ -68,7 +77,8 @@ router.post('/segment-customers', requireCompanyAccess, async (req: AuthRequest,
     const aiResponse = completion.choices[0]?.message?.content;
     
     if (!aiResponse) {
-      return res.status(500).json({ error: 'Failed to generate AI segmentation' });
+      res.status(500).json({ error: 'Failed to generate AI segmentation' });
+      return;
     }
 
     try {
@@ -80,7 +90,7 @@ router.post('/segment-customers', requireCompanyAccess, async (req: AuthRequest,
           name: name || 'AI Generated Segment',
           description: `AI-generated segment based on: ${criteria}`,
           conditions: segmentData,
-          companyId: req.user!.companyId,
+          companyId: req.user!.companyId!,
           createdBy: req.user!.id,
           aiGenerated: true
         }
@@ -113,11 +123,21 @@ router.post('/generate-content',
     body('goal').notEmpty(),
     body('tone').optional().isIn(['professional', 'casual', 'friendly', 'urgent'])
   ],
-  async (req: AuthRequest, res) => {
+  async (req: AuthRequest, res: any): Promise<void> => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      // Check if OpenAI is configured
+      if (!openai) {
+        res.status(503).json({ 
+          error: 'AI service not available',
+          message: 'OpenAI API key not configured'
+        });
+        return;
       }
 
       const { type, audience, goal, tone = 'professional', customPrompt, productInfo } = req.body;
@@ -171,7 +191,8 @@ router.post('/generate-content',
       const aiResponse = completion.choices[0]?.message?.content;
       
       if (!aiResponse) {
-        return res.status(500).json({ error: 'Failed to generate content' });
+        res.status(500).json({ error: 'Failed to generate content' });
+        return;
       }
 
       try {
@@ -202,9 +223,18 @@ router.post('/generate-content',
 );
 
 // AI campaign optimization suggestions
-router.post('/optimize-campaign', requireCompanyAccess, async (req: AuthRequest, res) => {
+router.post('/optimize-campaign', requireCompanyAccess, async (req: AuthRequest, res): Promise<void> => {
   try {
     const { campaignId } = req.body;
+
+    // Check if OpenAI is configured
+    if (!openai) {
+      res.status(503).json({ 
+        error: 'AI service not available',
+        message: 'OpenAI API key not configured'
+      });
+      return;
+    }
 
     const campaign = await prisma.campaign.findFirst({
       where: {
@@ -226,7 +256,8 @@ router.post('/optimize-campaign', requireCompanyAccess, async (req: AuthRequest,
     });
 
     if (!campaign) {
-      return res.status(404).json({ error: 'Campaign not found' });
+      res.status(404).json({ error: 'Campaign not found' });
+      return;
     }
 
     // Calculate campaign metrics
@@ -299,7 +330,8 @@ router.post('/optimize-campaign', requireCompanyAccess, async (req: AuthRequest,
     const aiResponse = completion.choices[0]?.message?.content;
     
     if (!aiResponse) {
-      return res.status(500).json({ error: 'Failed to generate optimization recommendations' });
+      res.status(500).json({ error: 'Failed to generate optimization recommendations' });
+      return;
     }
 
     try {
@@ -329,8 +361,17 @@ router.post('/optimize-campaign', requireCompanyAccess, async (req: AuthRequest,
 });
 
 // AI-powered insights and recommendations
-router.get('/insights', requireCompanyAccess, async (req: AuthRequest, res) => {
+router.get('/insights', requireCompanyAccess, async (req: AuthRequest, res): Promise<void> => {
   try {
+    // Check if OpenAI is configured
+    if (!openai) {
+      res.status(503).json({ 
+        error: 'AI service not available',
+        message: 'OpenAI API key not configured'
+      });
+      return;
+    }
+
     // Gather data for insights
     const [
       customerCount,
@@ -426,7 +467,8 @@ router.get('/insights', requireCompanyAccess, async (req: AuthRequest, res) => {
     const aiResponse = completion.choices[0]?.message?.content;
     
     if (!aiResponse) {
-      return res.status(500).json({ error: 'Failed to generate insights' });
+      res.status(500).json({ error: 'Failed to generate insights' });
+      return;
     }
 
     try {

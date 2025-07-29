@@ -16,7 +16,7 @@ import campaignRoutes from './routes/campaigns';
 import journeyRoutes from './routes/journeys';
 import segmentRoutes from './routes/segments';
 import templateRoutes from './routes/templates';
-import aiRoutes from './routes/ai-simple';
+import aiRoutes from './routes/ai';
 import dataImportRoutes from './routes/data-import';
 import analyticsRoutes from './routes/analytics';
 import webhookRoutes from './routes/webhooks';
@@ -80,8 +80,6 @@ app.use('/api/segments', authenticateToken, segmentRoutes);
 app.use('/api/templates', authenticateToken, templateRoutes);
 app.use('/api/ai', authenticateToken, aiRoutes);
 app.use('/api/data-import', authenticateToken, dataImportRoutes);
-app.use('/api/analytics', authenticateToken, analyticsRoutes);
-app.use('/api/webhooks', webhookRoutes);
 app.use('/api/analytics', authenticateToken, analyticsRoutes);
 app.use('/api/webhooks', webhookRoutes); // No auth for webhooks
 

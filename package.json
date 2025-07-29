@@ -16,7 +16,9 @@
     "backend:dev": "cd backend && npm run dev",
     "backend:build": "cd backend && npm run build",
     "db:migrate": "cd backend && npm run migrate",
-    "db:seed": "cd backend && npm run seed"
+    "db:seed": "cd backend && npm run seed",
+    "render:build": "npm install && npm run build",
+    "render:start": "npm start"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.1.2",

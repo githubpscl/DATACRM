@@ -16,7 +16,7 @@ router.post('/register',
     body('lastName').optional().trim().isLength({ min: 1 }),
     body('companyName').optional().trim().isLength({ min: 1 })
   ],
-  async (req, res) => {
+  async (req: any, res: any): Promise<void> => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -73,7 +73,7 @@ router.post('/register',
       const token = jwt.sign(
         { userId: user.id },
         process.env.JWT_SECRET!,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        { expiresIn: '7d' }
       );
 
       res.status(201).json({
@@ -94,7 +94,7 @@ router.post('/login',
     body('email').isEmail().normalizeEmail(),
     body('password').exists()
   ],
-  async (req, res) => {
+  async (req: any, res: any): Promise<void> => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -129,7 +129,7 @@ router.post('/login',
       const token = jwt.sign(
         { userId: user.id },
         process.env.JWT_SECRET!,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        { expiresIn: '7d' }
       );
 
       res.json({
@@ -153,26 +153,16 @@ router.post('/login',
 );
 
 // Get current user profile
-router.get('/me', async (req: AuthRequest, res) => {
+router.get('/me', async (req: AuthRequest, res): Promise<void> => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user!.id },
-      include: { company: true },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        companyId: true,
-        company: true,
-        lastLoginAt: true,
-        createdAt: true
-      }
+      include: { company: true }
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
 
     res.json({ user });
@@ -183,20 +173,21 @@ router.get('/me', async (req: AuthRequest, res) => {
 });
 
 // Refresh token
-router.post('/refresh', async (req: AuthRequest, res) => {
+router.post('/refresh', async (req: AuthRequest, res): Promise<void> => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user!.id }
     });
 
     if (!user || !user.isActive) {
-      return res.status(401).json({ error: 'Invalid user' });
+      res.status(401).json({ error: 'Invalid user' });
+      return;
     }
 
     const token = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      { expiresIn: '7d' }
     );
 
     res.json({ token });

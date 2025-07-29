@@ -77,7 +77,7 @@ router.get('/', requireCompanyAccess, async (req: AuthRequest, res) => {
 });
 
 // Get customer by ID
-router.get('/:id', requireCompanyAccess, async (req: AuthRequest, res) => {
+router.get('/:id', requireCompanyAccess, async (req: AuthRequest, res): Promise<void> => {
   try {
     const customer = await prisma.customer.findFirst({
       where: {
@@ -105,7 +105,8 @@ router.get('/:id', requireCompanyAccess, async (req: AuthRequest, res) => {
     });
 
     if (!customer) {
-      return res.status(404).json({ error: 'Customer not found' });
+      res.status(404).json({ error: 'Customer not found' });
+      return;
     }
 
     res.json({ customer });
@@ -125,7 +126,7 @@ router.post('/',
     body('phone').optional().trim(),
     body('customFields').optional().isObject()
   ],
-  async (req: AuthRequest, res) => {
+  async (req: AuthRequest, res: any): Promise<void> => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -143,7 +144,8 @@ router.post('/',
       });
 
       if (existingCustomer) {
-        return res.status(409).json({ error: 'Customer already exists' });
+        res.status(409).json({ error: 'Customer already exists' });
+        return;
       }
 
       const customer = await prisma.customer.create({
@@ -154,7 +156,7 @@ router.post('/',
           phone,
           customFields,
           tags: tags || [],
-          companyId: req.user!.companyId,
+          companyId: req.user!.companyId!,
           source: 'MANUAL'
         },
         include: {
@@ -185,6 +187,7 @@ router.post('/',
 );
 
 // Update customer
+// Update customer
 router.put('/:id',
   requireCompanyAccess,
   [
@@ -194,7 +197,7 @@ router.put('/:id',
     body('phone').optional().trim(),
     body('customFields').optional().isObject()
   ],
-  async (req: AuthRequest, res) => {
+  async (req: AuthRequest, res: any): Promise<void> => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -244,7 +247,7 @@ router.put('/:id',
 );
 
 // Delete customer
-router.delete('/:id', requireCompanyAccess, async (req: AuthRequest, res) => {
+router.delete('/:id', requireCompanyAccess, async (req: AuthRequest, res): Promise<void> => {
   try {
     const customer = await prisma.customer.findFirst({
       where: {
@@ -254,7 +257,8 @@ router.delete('/:id', requireCompanyAccess, async (req: AuthRequest, res) => {
     });
 
     if (!customer) {
-      return res.status(404).json({ error: 'Customer not found' });
+      res.status(404).json({ error: 'Customer not found' });
+      return;
     }
 
     await prisma.customer.delete({
@@ -269,12 +273,13 @@ router.delete('/:id', requireCompanyAccess, async (req: AuthRequest, res) => {
 });
 
 // Import customers from CSV/file
-router.post('/import', requireCompanyAccess, async (req: AuthRequest, res) => {
+router.post('/import', requireCompanyAccess, async (req: AuthRequest, res): Promise<void> => {
   try {
     const { customers } = req.body;
 
     if (!Array.isArray(customers)) {
-      return res.status(400).json({ error: 'Invalid customer data format' });
+      res.status(400).json({ error: 'Invalid customer data format' });
+      return;
     }
 
     const results = {
@@ -311,7 +316,7 @@ router.post('/import', requireCompanyAccess, async (req: AuthRequest, res) => {
             phone: customerData.phone || null,
             customFields: customerData.customFields || {},
             tags: customerData.tags || [],
-            companyId: req.user!.companyId,
+            companyId: req.user!.companyId!,
             source: 'IMPORT'
           }
         });
@@ -333,7 +338,7 @@ router.post('/import', requireCompanyAccess, async (req: AuthRequest, res) => {
 });
 
 // Get customer analytics
-router.get('/:id/analytics', requireCompanyAccess, async (req: AuthRequest, res) => {
+router.get('/:id/analytics', requireCompanyAccess, async (req: AuthRequest, res): Promise<void> => {
   try {
     const customer = await prisma.customer.findFirst({
       where: {
@@ -343,7 +348,8 @@ router.get('/:id/analytics', requireCompanyAccess, async (req: AuthRequest, res)
     });
 
     if (!customer) {
-      return res.status(404).json({ error: 'Customer not found' });
+      res.status(404).json({ error: 'Customer not found' });
+      return;
     }
 
     const [
