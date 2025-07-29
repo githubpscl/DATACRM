@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { apiCall } from '@/components/auth-provider'
 import { 
   Upload, 
   FileText, 
@@ -15,11 +14,8 @@ import {
   BarChart3,
   Calendar,
   Settings,
-  Filter,
   Download,
-  Trash2,
-  Play,
-  Pause
+  Play
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -227,7 +223,7 @@ export default function DataImportPage() {
       PENDING: 'outline'
     }
     return (
-      <Badge variant={variants[status as keyof typeof variants] as any}>
+      <Badge variant={variants[status as keyof typeof variants] as "default" | "destructive" | "secondary" | "outline"}>
         {status}
       </Badge>
     )

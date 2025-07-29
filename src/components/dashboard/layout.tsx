@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { 
   LayoutDashboard, 
   Users, 
-  BarChart3, 
   Settings, 
   Database,
   Workflow,
@@ -15,8 +14,6 @@ import {
   Menu,
   X,
   LogOut,
-  User,
-  Building,
   Bell,
   ChevronDown
 } from 'lucide-react'

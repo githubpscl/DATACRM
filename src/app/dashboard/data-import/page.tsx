@@ -3,9 +3,7 @@
 import { useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { apiCall } from '@/components/auth-provider'
 import { 
   Upload,
   FileText,
@@ -21,7 +19,6 @@ import {
   Phone,
   MapPin,
   Tag,
-  Calendar,
   Target,
   BarChart3,
   RefreshCw

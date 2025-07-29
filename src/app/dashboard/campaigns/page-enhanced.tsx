@@ -10,30 +10,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   Megaphone, 
   Plus,
-  Play,
-  Pause,
   Edit,
-  Trash2,
   Eye,
   TrendingUp,
   BarChart3,
   Brain,
-  Target,
-  Clock,
   Users,
   Mail,
   MessageSquare,
   Smartphone,
-  Calendar,
   CheckCircle,
-  AlertCircle,
   Zap,
   Settings,
-  Filter,
   Download,
-  Copy,
-  Send,
-  Activity
+  Copy
 } from 'lucide-react'
 
 interface Campaign {
@@ -127,7 +117,6 @@ export default function CampaignsEnhancedPage() {
   const [insights, setInsights] = useState<CampaignInsights | null>(null)
   const [aiRecommendations, setAiRecommendations] = useState<AIRecommendations | null>(null)
   const [automationRules, setAutomationRules] = useState<AutomationRule[]>([])
-  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null)
   const [loading, setLoading] = useState(true)
   const [aiProcessing, setAiProcessing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -135,7 +124,7 @@ export default function CampaignsEnhancedPage() {
 
   useEffect(() => {
     loadCampaignData()
-  }, [])
+  }, [loadCampaignData])
 
   const loadCampaignData = async () => {
     try {

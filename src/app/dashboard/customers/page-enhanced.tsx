@@ -757,7 +757,7 @@ export default function CustomersEnhancedPage() {
                 <div className="p-4 border rounded-lg bg-blue-50">
                   <h3 className="font-semibold mb-2">High-Value Kunden</h3>
                   <p className="text-2xl font-bold text-blue-600">234</p>
-                  <p className="text-sm text-gray-600">Umsatz > €10k, aktiv</p>
+                  <p className="text-sm text-gray-600">Umsatz &gt; €10k, aktiv</p>
                 </div>
                 <div className="p-4 border rounded-lg bg-green-50">
                   <h3 className="font-semibold mb-2">Wachstums-Potenzial</h3>

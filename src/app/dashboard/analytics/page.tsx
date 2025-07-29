@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { apiCall } from '@/components/auth-provider'
 import { 
-  BarChart3,
   TrendingUp,
   TrendingDown,
   Users,
@@ -14,9 +13,7 @@ import {
   MousePointer,
   Target,
   DollarSign,
-  Calendar,
   Download,
-  Filter,
   RefreshCw,
   Eye,
   Activity,
@@ -79,7 +76,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     loadAnalytics()
-  }, [timeRange])
+  }, [timeRange, loadAnalytics])
 
   const loadAnalytics = async () => {
     try {
