@@ -207,7 +207,7 @@ export default function CustomersEnhancedPage() {
     }
   }, [])
 
-  const generateAIRecommendations = async (data: Customer[]) => {
+  const generateAIRecommendations = async () => {
     setAiProcessing(true)
     
     // Simulate AI processing
