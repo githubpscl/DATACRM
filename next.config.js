@@ -1,11 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  output: 'export',
+  trailingSlash: true,
+  images: {
+    unoptimized: true
+  },
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client'],
-  },
-  images: {
-    domains: ['localhost', 'your-domain.com'],
   },
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,

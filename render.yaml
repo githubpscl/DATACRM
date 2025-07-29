@@ -1,10 +1,18 @@
 services:
+  # PostgreSQL Database (Free Tier)
+  - type: pserv
+    name: datacrm-db
+    databaseName: datacrm
+    user: datacrm_user
+    plan: free
+
   # Backend API Service
   - type: web
     name: datacrm-backend
     runtime: node
     rootDir: backend
-    buildCommand: npm install && npm run build
+    plan: free
+    buildCommand: npm install && npx prisma generate && npx prisma db push --force-reset
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -12,7 +20,9 @@ services:
       - key: PORT
         value: 8000
       - key: DATABASE_URL
-        value: file:./prisma/dev.db
+        fromDatabase:
+          name: datacrm-db
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGIN
@@ -20,11 +30,14 @@ services:
           type: web
           name: datacrm-frontend
           property: host
+      - key: OPENAI_API_KEY
+        value: sk-your-openai-key-here
 
   # Frontend Next.js Service  
   - type: web
     name: datacrm-frontend
     runtime: node
+    plan: free
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:

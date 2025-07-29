@@ -2,6 +2,23 @@
 
 Eine moderne, KI-gestützte CRM- und Marketing-Automation-Plattform mit fortschrittlichen Datenmanagement-Funktionen.
 
+## 🌐 **Live Demo** 
+**[🚀 Zur Live-Anwendung](https://datacrm-frontend.onrender.com)** (Deploy mit einem Klick!)
+
+## 📱 **Schnell-Deployment**
+```bash
+# 1. Repository klonen
+git clone https://github.com/githubpscl/DATACRM.git
+cd DATACRM
+
+# 2. Automatisches Deployment
+./deploy.bat  # Windows
+# oder
+./deploy.sh   # Mac/Linux
+```
+
+**Anschließend:** Gehen Sie zu [render.com](https://render.com) → GitHub verbinden → Repository wählen → Deploy!
+
 ## 🚀 Features
 
 ### ✅ Implementiert
