@@ -1,5 +1,51 @@
 @echo off
-echo 🚀 DATACRM - Kostenlose Deployment Optionen
+echo 🚀 D@echo off
+echo 🚀 DATACRM - DAUERHAFT KOSTENLOSE Deployment Optionen
+echo ========================================================
+
+REM Git Status prüfen
+echo 📋 Prüfe Git Status...
+git status
+
+REM Änderungen committen
+echo 💾 Committe alle Änderungen...
+git add .
+git commit -m "Deploy: %date% %time%"
+
+REM Push to GitHub
+echo 📤 Push zu GitHub...
+git push origin main
+
+echo.
+echo ✅ Repository ist bereit für Deployment!
+echo.
+echo 🏆 DAUERHAFT KOSTENLOSE OPTIONEN (ohne Zeitlimit):
+echo.
+echo 🥇 Option 1: GitHub Pages + Supabase (EMPFOHLEN)
+echo    ✅ Frontend: GitHub Pages (dauerhaft kostenlos)
+echo    ✅ Backend: Supabase (dauerhaft kostenlos) 
+echo    ✅ Keine Kreditkarte erforderlich
+echo    ✅ Kein Zeitlimit!
+echo    📖 Anleitung: GITHUB_PAGES_DEPLOYMENT.md
+echo.
+echo 🥈 Option 2: Vercel + Supabase
+echo    ✅ Frontend: Vercel (dauerhaft kostenlos)
+echo    ✅ Backend: Supabase (dauerhaft kostenlos)
+echo    🌐 URL: https://vercel.com
+echo.
+echo 🥉 Option 3: Netlify + Supabase  
+echo    ✅ Frontend: Netlify (dauerhaft kostenlos)
+echo    ✅ Backend: Supabase (dauerhaft kostenlos)
+echo    🌐 URL: https://netlify.com
+echo.
+echo ⚠️  NICHT empfohlen (kostenpflichtig nach Probezeit):
+echo    ❌ Railway.app (nur 30 Tage kostenlos)
+echo    ❌ Render.com (erfordert Kreditkarte)
+echo.
+echo 📖 Für GitHub Pages: Lesen Sie GITHUB_PAGES_DEPLOYMENT.md
+echo 🚀 Für schnelles Vercel Deployment: Gehen Sie zu vercel.com
+echo.
+pauseTACRM - Kostenlose Deployment Optionen
 echo ==========================================
 
 REM Git Status prüfen
