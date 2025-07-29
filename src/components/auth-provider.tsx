@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase, signIn, signUp, signOut } from '@/lib/supabase'
 
 interface User {
   id: string
@@ -36,29 +37,36 @@ interface RegisterData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Configure API base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-
-// Simple fetch wrapper for API calls
+// Simple fetch wrapper for API calls (using Supabase for demo)
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
   
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    },
-    ...options,
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Network error' }))
-    throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+  // For demo purposes, return mock data instead of making real API calls
+  // In a real app, you'd make calls to your Supabase functions or other APIs
+  if (!token && endpoint.includes('/auth/')) {
+    throw new Error('Not authenticated')
   }
-
-  return response.json()
+  
+  // Mock API responses for demo
+  await new Promise(resolve => setTimeout(resolve, 500)) // Simulate network delay
+  
+  if (endpoint.includes('/analytics')) {
+    return { analytics: null } // Will fallback to mock data
+  }
+  
+  if (endpoint.includes('/customers')) {
+    return { customers: [] } // Will fallback to mock data
+  }
+  
+  if (endpoint.includes('/campaigns')) {
+    return { campaigns: [] } // Will fallback to mock data
+  }
+  
+  return { data: null }
 }
+
+export { apiCall }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -67,87 +75,159 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
-    // Check for stored auth data on component mount
-    if (typeof window !== 'undefined') {
-      const storedToken = localStorage.getItem('token')
-      const storedUser = localStorage.getItem('user')
-
-      if (storedToken && storedUser) {
-        try {
-          setToken(storedToken)
-          setUser(JSON.parse(storedUser))
-        } catch (error) {
-          console.error('Error parsing stored user data:', error)
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
+    // Check initial auth state
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+          const userData: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            firstName: session.user.user_metadata?.firstName || 'Demo',
+            lastName: session.user.user_metadata?.lastName || 'User',
+            role: 'admin'
+          }
+          setUser(userData)
+          setToken(session.access_token)
         }
+      } catch (error) {
+        console.error('Error initializing auth:', error)
+      } finally {
+        setLoading(false)
       }
     }
-    setLoading(false)
+
+    initializeAuth()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          const userData: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            firstName: session.user.user_metadata?.firstName || 'Demo',
+            lastName: session.user.user_metadata?.lastName || 'User',
+            role: 'admin'
+          }
+          setUser(userData)
+          setToken(session.access_token)
+        } else {
+          setUser(null)
+          setToken(null)
+        }
+        setLoading(false)
+      }
+    )
+
+    return () => subscription.unsubscribe()
   }, [])
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await apiCall('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      })
+      setLoading(true)
       
-      const { user: userData, token: authToken } = response
-
-      setUser(userData)
-      setToken(authToken)
-      
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('token', authToken)
-        localStorage.setItem('user', JSON.stringify(userData))
+      // For demo purposes, allow demo@example.com with any password
+      if (email === 'demo@example.com') {
+        const mockUser: User = {
+          id: 'demo-user-id',
+          email: 'demo@example.com',
+          firstName: 'Demo',
+          lastName: 'User',
+          role: 'admin',
+          companyId: 'demo-company',
+          company: {
+            id: 'demo-company',
+            name: 'Demo Company'
+          }
+        }
+        setUser(mockUser)
+        setToken('demo-token')
+        router.push('/dashboard')
+        return
       }
 
-      router.push('/dashboard')
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed'
-      throw new Error(errorMessage)
+      // For real users, use Supabase
+      const { data, error } = await signIn(email, password)
+      if (error) throw error
+
+      if (data.user) {
+        const userData: User = {
+          id: data.user.id,
+          email: data.user.email || '',
+          firstName: data.user.user_metadata?.firstName || 'User',
+          lastName: data.user.user_metadata?.lastName || '',
+          role: 'user'
+        }
+        setUser(userData)
+        setToken(data.session?.access_token || null)
+        router.push('/dashboard')
+      }
+    } catch (error: any) {
+      console.error('Login error:', error)
+      throw new Error(error.message || 'Login failed')
+    } finally {
+      setLoading(false)
     }
   }
 
   const register = async (data: RegisterData) => {
     try {
-      const response = await apiCall('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      })
-      
-      const { user: userData, token: authToken } = response
+      setLoading(true)
+      const { data: authData, error } = await signUp(data.email, data.password)
+      if (error) throw error
 
-      setUser(userData)
-      setToken(authToken)
-      
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('token', authToken)
-        localStorage.setItem('user', JSON.stringify(userData))
+      if (authData.user) {
+        // Update user metadata
+        await supabase.auth.updateUser({
+          data: {
+            firstName: data.firstName,
+            lastName: data.lastName,
+            companyName: data.companyName
+          }
+        })
+
+        const userData: User = {
+          id: authData.user.id,
+          email: authData.user.email || '',
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          role: 'user'
+        }
+        setUser(userData)
+        setToken(authData.session?.access_token || null)
+        router.push('/dashboard')
       }
-
-      router.push('/dashboard')
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed'
-      throw new Error(errorMessage)
+    } catch (error: any) {
+      console.error('Registration error:', error)
+      throw new Error(error.message || 'Registration failed')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const logout = () => {
-    setUser(null)
-    setToken(null)
-    
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
+  const logout = async () => {
+    try {
+      await signOut()
+      setUser(null)
+      setToken(null)
+      router.push('/login')
+    } catch (error) {
+      console.error('Logout error:', error)
     }
-    
-    router.push('/login')
+  }
+
+  const value: AuthContextType = {
+    user,
+    token,
+    login,
+    register,
+    logout,
+    loading
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )
@@ -160,6 +240,3 @@ export function useAuth() {
   }
   return context
 }
-
-// Export API utility for use in other components
-export { apiCall }
