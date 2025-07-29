@@ -78,6 +78,7 @@ export default function CampaignsPage() {
 
   useEffect(() => {
     filterCampaigns()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campaigns, searchTerm, selectedStatus, selectedType])
 
   const loadCampaigns = async () => {

@@ -1,24 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
-  Users, 
   Search,
-  Filter,
   Plus,
   Edit,
-  Trash2,
   Mail,
-  Phone,
-  Building,
-  Calendar,
-  Star,
   TrendingUp,
   BarChart3,
   Brain,
@@ -109,19 +101,18 @@ export default function CustomersEnhancedPage() {
   const [aiRecommendations, setAiRecommendations] = useState<AIRecommendations | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSegment, setSelectedSegment] = useState('all')
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [loading, setLoading] = useState(true)
   const [aiProcessing, setAiProcessing] = useState(false)
 
   useEffect(() => {
     loadCustomerData()
-  }, [])
+  }, [loadCustomerData])
 
   useEffect(() => {
     filterCustomers()
-  }, [customers, searchTerm, selectedSegment])
+  }, [filterCustomers])
 
-  const loadCustomerData = async () => {
+  const loadCustomerData = useCallback(async () => {
     try {
       // Simulated customer data
       const mockCustomers: Customer[] = [
@@ -214,9 +205,9 @@ export default function CustomersEnhancedPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const generateAIRecommendations = async (customerData: Customer[]) => {
+  const generateAIRecommendations = async (data: Customer[]) => {
     setAiProcessing(true)
     
     // Simulate AI processing
@@ -291,7 +282,7 @@ export default function CustomersEnhancedPage() {
     setAiProcessing(false)
   }
 
-  const filterCustomers = () => {
+  const filterCustomers = useCallback(() => {
     let filtered = customers
 
     if (searchTerm) {
@@ -308,7 +299,7 @@ export default function CustomersEnhancedPage() {
     }
 
     setFilteredCustomers(filtered)
-  }
+  }, [customers, searchTerm, selectedSegment])
 
   const getStatusColor = (status: string) => {
     switch (status) {

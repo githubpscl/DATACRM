@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -78,7 +78,7 @@ export default function AnalyticsPage() {
     loadAnalytics()
   }, [timeRange, loadAnalytics])
 
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     try {
       setLoading(true)
       const response = await apiCall(`/api/analytics?timeRange=${timeRange}`)
@@ -89,7 +89,7 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [timeRange])
 
   const getMockAnalytics = (): AnalyticsData => ({
     overview: {

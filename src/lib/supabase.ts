@@ -57,7 +57,7 @@ export const addCustomer = async (customer: {
   return { data, error }
 }
 
-export const updateCustomer = async (id: string, updates: any) => {
+export const updateCustomer = async (id: string, updates: Record<string, unknown>) => {
   const { data, error } = await supabase
     .from('customers')
     .update(updates)
