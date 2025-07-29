@@ -38,7 +38,7 @@ interface RegisterData {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // Simple fetch wrapper for API calls (using Supabase for demo)
-const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+const apiCall = async (endpoint: string) => {
   const { data: { session } } = await supabase.auth.getSession()
   const token = session?.access_token
   
@@ -163,9 +163,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(data.session?.access_token || null)
         router.push('/dashboard')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error)
-      throw new Error(error.message || 'Login failed')
+      const errorMessage = error instanceof Error ? error.message : 'Login failed'
+      throw new Error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -198,9 +199,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(authData.session?.access_token || null)
         router.push('/dashboard')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Registration error:', error)
-      throw new Error(error.message || 'Registration failed')
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed'
+      throw new Error(errorMessage)
     } finally {
       setLoading(false)
     }
