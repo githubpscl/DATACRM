@@ -185,9 +185,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         onClick={() => router.push(subItem.href)}
                         className={`text-sm transition-colors px-3 py-2 rounded-md ${
                           isActiveSubItem
-                            ? 'text-blue-700 bg-blue-100 font-extrabold border-b-2 border-blue-700'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-normal'
+                            ? 'text-blue-700 bg-blue-100 border-b-2 border-blue-700'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                         }`}
+                        style={{
+                          fontWeight: isActiveSubItem ? '900' : '400'
+                        }}
                       >
                         {subItem.name}
                       </button>
@@ -205,9 +208,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         onClick={() => router.push(subItem.href)}
                         className={`text-sm transition-colors px-3 py-2 rounded-md ${
                           isActiveSubItem
-                            ? 'text-blue-700 bg-blue-100 font-extrabold border-b-2 border-blue-700'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-normal'
+                            ? 'text-blue-700 bg-blue-100 border-b-2 border-blue-700'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                         }`}
+                        style={{
+                          fontWeight: isActiveSubItem ? '900' : '400'
+                        }}
                       >
                         {subItem.name}
                       </button>
