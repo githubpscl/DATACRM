@@ -93,10 +93,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
 
+  // Debug logging
+  console.log('Current pathname:', pathname)
+
   // Find active main navigation item
   const activeNavItem = navigation.find(item => 
     pathname === item.href || pathname.startsWith(item.href + '/')
   )
+
+  console.log('Active nav item:', activeNavItem?.name)
 
   // Special handling for dashboard and analytics pages
   const isDashboardPage = pathname === '/dashboard'
@@ -179,19 +184,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 {(isDashboardPage || isAnalyticsPage || !activeNavItem) && 
                   dashboardSubItems.map((subItem) => {
                     const isActiveSubItem = pathname === subItem.href
+                    console.log(`Dashboard sub-item: ${subItem.name}, href: ${subItem.href}, pathname: ${pathname}, isActive: ${isActiveSubItem}`)
                     return (
                       <button
                         key={subItem.name}
                         onClick={() => router.push(subItem.href)}
-                        className={`relative text-sm transition-colors px-3 py-2 rounded-md ${
+                        className={`relative text-sm transition-colors px-4 py-2 rounded-md border-2 ${
                           isActiveSubItem
-                            ? 'text-blue-800 bg-blue-50 border border-blue-200'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                            ? 'text-white bg-blue-600 border-blue-700 shadow-md font-semibold'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-transparent'
                         }`}
                       >
                         {subItem.name}
                         {isActiveSubItem && (
-                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></div>
+                          <>
+                            <div className="absolute -top-1 -left-1 -right-1 -bottom-1 bg-blue-500 rounded-md -z-10 animate-pulse"></div>
+                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400 rounded-full"></div>
+                          </>
                         )}
                       </button>
                     )
@@ -202,19 +211,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 {activeNavItem && !isDashboardPage && !isAnalyticsPage &&
                   activeNavItem.subItems.map((subItem) => {
                     const isActiveSubItem = pathname === subItem.href
+                    console.log(`Checking sub-item: ${subItem.name}, href: ${subItem.href}, pathname: ${pathname}, isActive: ${isActiveSubItem}`)
                     return (
                       <button
                         key={subItem.name}
                         onClick={() => router.push(subItem.href)}
-                        className={`relative text-sm transition-colors px-3 py-2 rounded-md ${
+                        className={`relative text-sm transition-colors px-4 py-2 rounded-md border-2 ${
                           isActiveSubItem
-                            ? 'text-blue-800 bg-blue-50 border border-blue-200'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                            ? 'text-white bg-blue-600 border-blue-700 shadow-md font-semibold'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-transparent'
                         }`}
                       >
                         {subItem.name}
                         {isActiveSubItem && (
-                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></div>
+                          <>
+                            <div className="absolute -top-1 -left-1 -right-1 -bottom-1 bg-blue-500 rounded-md -z-10 animate-pulse"></div>
+                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400 rounded-full"></div>
+                          </>
                         )}
                       </button>
                     )
