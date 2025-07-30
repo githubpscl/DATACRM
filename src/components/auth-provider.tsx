@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, signIn, signUp, signOut } from '@/lib/supabase'
 
@@ -25,6 +25,7 @@ interface AuthContextType {
   register: (data: RegisterData) => Promise<void>
   logout: () => void
   loading: boolean
+  resetInactivityTimer: () => void
 }
 
 interface RegisterData {
@@ -36,6 +37,14 @@ interface RegisterData {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+// Constants for session management
+const SESSION_TIMEOUT = 10 * 60 * 1000 // 10 minutes in milliseconds
+const STORAGE_KEY = 'datacrm-auth-session'
+const LAST_ACTIVITY_KEY = 'datacrm-last-activity'
+
+// Activity events to track
+const ACTIVITY_EVENTS = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click']
 
 // Simple fetch wrapper for API calls (using Supabase for demo)
 const apiCall = async (endpoint: string) => {
@@ -73,22 +82,124 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const lastActivityRef = useRef<number>(Date.now())
+
+  // Save session to localStorage
+  const saveSession = useCallback((userData: User, userToken: string) => {
+    try {
+      const sessionData = {
+        user: userData,
+        token: userToken,
+        timestamp: Date.now()
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionData))
+      localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString())
+    } catch (error) {
+      console.error('Error saving session:', error)
+    }
+  }, [])
+
+  // Load session from localStorage
+  const loadSession = useCallback(() => {
+    try {
+      const savedSession = localStorage.getItem(STORAGE_KEY)
+      const lastActivity = localStorage.getItem(LAST_ACTIVITY_KEY)
+      
+      if (savedSession && lastActivity) {
+        const sessionData = JSON.parse(savedSession)
+        const lastActivityTime = parseInt(lastActivity)
+        const now = Date.now()
+        
+        // Check if session is still valid (within timeout period)
+        if (now - lastActivityTime < SESSION_TIMEOUT) {
+          setUser(sessionData.user)
+          setToken(sessionData.token)
+          lastActivityRef.current = lastActivityTime
+          return true
+        } else {
+          // Session expired, clear it
+          clearSession()
+        }
+      }
+    } catch (error) {
+      console.error('Error loading session:', error)
+      clearSession()
+    }
+    return false
+  }, [])
+
+  // Clear session from localStorage
+  const clearSession = useCallback(() => {
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(LAST_ACTIVITY_KEY)
+    } catch (error) {
+      console.error('Error clearing session:', error)
+    }
+  }, [])
+
+  // Update last activity timestamp
+  const updateLastActivity = useCallback(() => {
+    const now = Date.now()
+    lastActivityRef.current = now
+    try {
+      localStorage.setItem(LAST_ACTIVITY_KEY, now.toString())
+    } catch (error) {
+      console.error('Error updating last activity:', error)
+    }
+  }, [])
+
+  // Reset inactivity timer
+  const resetInactivityTimer = useCallback(() => {
+    // Clear existing timer
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current)
+    }
+
+    // Update activity timestamp
+    updateLastActivity()
+
+    // Set new timer
+    inactivityTimerRef.current = setTimeout(() => {
+      console.log('Session expired due to inactivity')
+      logout()
+    }, SESSION_TIMEOUT)
+  }, [updateLastActivity])
+
+  // Check session validity periodically
+  const checkSessionValidity = useCallback(() => {
+    const lastActivity = parseInt(localStorage.getItem(LAST_ACTIVITY_KEY) || '0')
+    const now = Date.now()
+    
+    if (user && now - lastActivity > SESSION_TIMEOUT) {
+      console.log('Session expired during validity check')
+      logout()
+    }
+  }, [user])
 
   useEffect(() => {
     // Check initial auth state
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session?.user) {
-          const userData: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            firstName: session.user.user_metadata?.firstName || 'Demo',
-            lastName: session.user.user_metadata?.lastName || 'User',
-            role: 'admin'
+        // First try to load from localStorage
+        const sessionLoaded = loadSession()
+        
+        if (!sessionLoaded) {
+          // Fallback to Supabase session check
+          const { data: { session } } = await supabase.auth.getSession()
+          if (session?.user) {
+            const userData: User = {
+              id: session.user.id,
+              email: session.user.email || '',
+              firstName: session.user.user_metadata?.firstName || 'Demo',
+              lastName: session.user.user_metadata?.lastName || 'User',
+              role: 'admin'
+            }
+            setUser(userData)
+            setToken(session.access_token)
+            saveSession(userData, session.access_token)
           }
-          setUser(userData)
-          setToken(session.access_token)
         }
       } catch (error) {
         console.error('Error initializing auth:', error)
@@ -99,7 +210,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initializeAuth()
 
-    // Listen for auth changes
+    // Listen for auth changes from Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
@@ -112,16 +223,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           setUser(userData)
           setToken(session.access_token)
+          saveSession(userData, session.access_token)
         } else {
           setUser(null)
           setToken(null)
+          clearSession()
         }
         setLoading(false)
       }
     )
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [loadSession, saveSession, clearSession])
+
+  // Set up activity tracking and inactivity timer
+  useEffect(() => {
+    if (user) {
+      // Start inactivity timer
+      resetInactivityTimer()
+
+      // Add activity event listeners
+      const handleActivity = () => {
+        resetInactivityTimer()
+      }
+
+      ACTIVITY_EVENTS.forEach(event => {
+        document.addEventListener(event, handleActivity, { passive: true })
+      })
+
+      // Periodic session validity check
+      const validityCheckInterval = setInterval(checkSessionValidity, 60000) // Check every minute
+
+      return () => {
+        // Cleanup
+        if (inactivityTimerRef.current) {
+          clearTimeout(inactivityTimerRef.current)
+        }
+        clearInterval(validityCheckInterval)
+        ACTIVITY_EVENTS.forEach(event => {
+          document.removeEventListener(event, handleActivity)
+        })
+      }
+    }
+  }, [user, resetInactivityTimer, checkSessionValidity])
 
   const login = async (email: string, password: string) => {
     try {
@@ -143,6 +287,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         setUser(mockUser)
         setToken('demo-token')
+        saveSession(mockUser, 'demo-token')
         router.push('/dashboard')
         return
       }
@@ -163,6 +308,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         setUser(mockUser)
         setToken('super-admin-token')
+        saveSession(mockUser, 'super-admin-token')
         router.push('/dashboard')
         return
       }
@@ -181,6 +327,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         setUser(userData)
         setToken(data.session?.access_token || null)
+        if (data.session?.access_token) {
+          saveSession(userData, data.session.access_token)
+        }
         router.push('/dashboard')
       }
     } catch (error: unknown) {
@@ -217,6 +366,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         setUser(userData)
         setToken(authData.session?.access_token || null)
+        if (authData.session?.access_token) {
+          saveSession(userData, authData.session.access_token)
+        }
         router.push('/dashboard')
       }
     } catch (error: unknown) {
@@ -230,12 +382,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await signOut()
+      // Clear timers
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current)
+      }
+      
+      // Clear local session
+      clearSession()
       setUser(null)
       setToken(null)
+      
+      // Sign out from Supabase (for real users)
+      await signOut()
+      
       router.push('/login')
     } catch (error) {
       console.error('Logout error:', error)
+      // Even if Supabase logout fails, clear local state
+      clearSession()
+      setUser(null)
+      setToken(null)
+      router.push('/login')
     }
   }
 
@@ -245,7 +412,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     register,
     logout,
-    loading
+    loading,
+    resetInactivityTimer
   }
 
   return (

@@ -3,6 +3,7 @@
 import React, { ReactNode, useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import UserDropdown from '@/components/ui/user-dropdown'
+import SessionStatus from '@/components/ui/session-status'
 import { useAuth } from '@/components/auth-provider'
 import { isSuperAdmin, getUserRole } from '@/lib/supabase'
 import { 
@@ -116,7 +117,7 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, loading } = useAuth()
+  const { user, loading, resetInactivityTimer } = useAuth()
   const [userRole, setUserRole] = useState<string | null>(null)
   const [isSuper, setIsSuper] = useState(false)
 
@@ -126,6 +127,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       router.push('/login')
     }
   }, [user, loading, router])
+
+  // Reset activity timer on navigation
+  useEffect(() => {
+    if (user) {
+      resetInactivityTimer()
+    }
+  }, [pathname, user, resetInactivityTimer])
 
   // Check user permissions
   useEffect(() => {
@@ -303,6 +311,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {children}
       </main>
+
+      {/* Session Status Component */}
+      <SessionStatus />
     </div>
   )
 }
