@@ -304,7 +304,7 @@ export const getUserRoles = async () => {
         organization_id,
         role,
         created_at,
-        organization:organizations!organization_id(name)
+        organizations!organization_id(name)
       `)
     
     if (error) {
@@ -312,11 +312,14 @@ export const getUserRoles = async () => {
       return { data: [], error }
     }
     
-    // Add mock user data since we can't access auth.users directly
+    // Transform the data to match the expected interface
     const rolesWithUser = data?.map(role => ({
       ...role,
       user: {
         email: `user-${role.user_id.slice(0, 8)}@example.com`
+      },
+      organization: {
+        name: (role.organizations as any)?.name || 'Unknown Organization'
       }
     })) || []
     

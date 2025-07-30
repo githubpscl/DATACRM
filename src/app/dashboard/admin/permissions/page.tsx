@@ -12,7 +12,7 @@ import {
   getAllRoles,
   getAllPermissions,
   getOrgUsers,
-  assignRole,
+  assignUserRole,
   assignPermission
 } from '@/lib/supabase'
 import { 
@@ -103,7 +103,7 @@ export default function UserPermissionsPage() {
     if (!currentUser) return
     
     try {
-      const { error } = await assignRole({
+      const { error } = await assignUserRole({
         user_id: userId,
         role_id: roleId,
         org_id: 'demo-org-id',
@@ -111,7 +111,7 @@ export default function UserPermissionsPage() {
       })
 
       if (error) {
-        alert(`Fehler beim Zuweisen der Rolle: ${error.message}`)
+        alert(`Fehler beim Zuweisen der Rolle: ${error}`)
       } else {
         alert('✅ Rolle erfolgreich zugewiesen!')
         await loadData()

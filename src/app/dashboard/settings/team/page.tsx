@@ -89,7 +89,7 @@ export default function TeamPage() {
 
         // Load user roles
         const { data: rolesData } = await getUserRoles()
-        setUserRoles(rolesData || [])
+        setUserRoles((rolesData as UserRole[]) || [])
 
       } catch (error) {
         console.error('Error loading team data:', error)
@@ -147,7 +147,7 @@ export default function TeamPage() {
 
       // Reload data
       const { data: rolesData } = await getUserRoles()
-      setUserRoles(rolesData || [])
+      setUserRoles((rolesData as UserRole[]) || [])
       
       alert('Rolle erfolgreich geändert!')
     } catch (error) {
@@ -171,7 +171,7 @@ export default function TeamPage() {
 
       // Reload data
       const { data: rolesData } = await getUserRoles()
-      setUserRoles(rolesData || [])
+      setUserRoles((rolesData as UserRole[]) || [])
       
       alert('Benutzer erfolgreich entfernt!')
     } catch (error) {
