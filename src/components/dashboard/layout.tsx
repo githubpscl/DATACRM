@@ -183,16 +183,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <button
                         key={subItem.name}
                         onClick={() => router.push(subItem.href)}
-                        className={`text-sm transition-colors px-3 py-2 rounded-md ${
+                        className={`relative text-sm transition-colors px-3 py-2 rounded-md ${
                           isActiveSubItem
-                            ? 'text-blue-700 bg-blue-100 border-b-2 border-blue-700 !font-black'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-normal'
+                            ? 'text-blue-800 bg-blue-50 border border-blue-200'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                         }`}
-                        style={{
-                          fontWeight: isActiveSubItem ? 'bold !important' : 'normal'
-                        }}
                       >
                         {subItem.name}
+                        {isActiveSubItem && (
+                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></div>
+                        )}
                       </button>
                     )
                   })
@@ -206,16 +206,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <button
                         key={subItem.name}
                         onClick={() => router.push(subItem.href)}
-                        className={`text-sm transition-colors px-3 py-2 rounded-md ${
+                        className={`relative text-sm transition-colors px-3 py-2 rounded-md ${
                           isActiveSubItem
-                            ? 'text-blue-700 bg-blue-100 border-b-2 border-blue-700 !font-black'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-normal'
+                            ? 'text-blue-800 bg-blue-50 border border-blue-200'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                         }`}
-                        style={{
-                          fontWeight: isActiveSubItem ? 'bold !important' : 'normal'
-                        }}
                       >
                         {subItem.name}
+                        {isActiveSubItem && (
+                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></div>
+                        )}
                       </button>
                     )
                   })
