@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/dashboard/layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useRouter } from 'next/navigation'
 import { 
   User,
   Users,
@@ -87,6 +88,12 @@ const connectedIntegrations = [
 ]
 
 export default function SettingsPage() {
+  const router = useRouter()
+  
+  const handleNavigateToSection = (href: string) => {
+    router.push(href)
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -103,7 +110,11 @@ export default function SettingsPage() {
           {settingsSections.map((section) => {
             const Icon = section.icon
             return (
-              <Card key={section.name} className="hover:shadow-md transition-all duration-200 cursor-pointer group border border-gray-200 hover:border-blue-300">
+              <Card 
+                key={section.name} 
+                className="hover:shadow-md transition-all duration-200 cursor-pointer group border border-gray-200 hover:border-blue-300"
+                onClick={() => handleNavigateToSection(section.href)}
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
