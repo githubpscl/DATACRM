@@ -12,15 +12,10 @@ import {
   Palette
 } from 'lucide-react'
 
-interface UserDropdownProps {
-  userName?: string
-  userEmail?: string
-}
-
-export default function UserDropdown({ userName = "Max Mustermann", userEmail = "max@example.com" }: UserDropdownProps) {
+export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
   const router = useRouter()
 
   // Close dropdown when clicking outside
@@ -37,14 +32,28 @@ export default function UserDropdown({ userName = "Max Mustermann", userEmail = 
     }
   }, [])
 
-  // Get initials from name
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
+  // Get initials from user name or email
+  const getInitials = () => {
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase()
+    } else if (user?.firstName) {
+      return user.firstName.charAt(0).toUpperCase()
+    } else if (user?.email) {
+      return user.email.substring(0, 2).toUpperCase()
+    }
+    return 'U'
+  }
+
+  // Get display name
+  const getDisplayName = () => {
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName} ${user.lastName}`
+    } else if (user?.firstName) {
+      return user.firstName
+    } else if (user?.email) {
+      return user.email.split('@')[0]
+    }
+    return 'Benutzer'
   }
 
   const handleSignOut = async () => {
@@ -57,6 +66,10 @@ export default function UserDropdown({ userName = "Max Mustermann", userEmail = 
     router.push(path)
   }
 
+  if (!user) {
+    return null
+  }
+
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Avatar Button */}
@@ -64,7 +77,7 @@ export default function UserDropdown({ userName = "Max Mustermann", userEmail = 
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-center w-9 h-9 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105"
       >
-        {getInitials(userName)}
+        {getInitials()}
       </button>
 
       {/* Dropdown Menu */}
@@ -74,14 +87,14 @@ export default function UserDropdown({ userName = "Max Mustermann", userEmail = 
           <div className="px-4 py-4 border-b border-gray-100">
             <div className="flex items-center space-x-3">
               <div className="flex items-center justify-center w-12 h-12 bg-blue-600 text-white rounded-full text-sm font-medium">
-                {getInitials(userName)}
+                {getInitials()}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">
-                  {userName}
+                  {getDisplayName()}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  {userEmail}
+                  {user.email}
                 </p>
                 <div className="mt-1">
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">

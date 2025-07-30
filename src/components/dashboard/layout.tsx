@@ -171,10 +171,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
               {/* User Actions */}
               <div className="flex items-center space-x-4">
-                <UserDropdown 
-                  userName="Max Mustermann" 
-                  userEmail="max@example.com" 
-                />
+                <UserDropdown />
               </div>
             </div>
           </div>
