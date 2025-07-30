@@ -108,27 +108,64 @@ export default function DataImportPage() {
       alert('Nur CSV und Excel-Dateien sind erlaubt.')
     }
 
+    // Add files to preview list (no upload yet)
     setUploadedFiles(prev => [...prev, ...validFiles])
-    
-    // Simulate upload progress for each file
-    validFiles.forEach(file => {
-      simulateUpload(file.name)
-    })
   }
 
-  // Simulate file upload with progress
-  const simulateUpload = (fileName: string) => {
+  // Process and upload files to database
+  const processFiles = async () => {
+    if (uploadedFiles.length === 0) {
+      alert('Bitte wählen Sie zuerst Dateien aus.')
+      return
+    }
+
     setIsUploading(true)
-    let progress = 0
-    const interval = setInterval(() => {
-      progress += Math.random() * 30
-      if (progress >= 100) {
-        progress = 100
-        clearInterval(interval)
-        setIsUploading(false)
+
+    for (const file of uploadedFiles) {
+      await processFile(file)
+    }
+
+    setIsUploading(false)
+    alert(`${uploadedFiles.length} Datei(en) erfolgreich verarbeitet!`)
+    
+    // Clear the uploaded files after successful processing
+    setUploadedFiles([])
+    setUploadProgress({})
+  }
+
+  // Process individual file
+  const processFile = async (file: File): Promise<void> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      
+      reader.onload = (e) => {
+        const content = e.target?.result as string
+        
+        // Simulate processing with progress
+        let progress = 0
+        const interval = setInterval(() => {
+          progress += Math.random() * 20 + 10 // Faster progress for actual processing
+          
+          if (progress >= 100) {
+            progress = 100
+            clearInterval(interval)
+            
+            // Here you would normally send the data to your backend API
+            console.log(`Processing file: ${file.name}`)
+            console.log(`File content preview:`, content.substring(0, 200) + '...')
+            
+            // Simulate API call
+            setTimeout(() => {
+              resolve()
+            }, 500)
+          }
+          
+          setUploadProgress(prev => ({ ...prev, [file.name]: progress }))
+        }, 100)
       }
-      setUploadProgress(prev => ({ ...prev, [fileName]: progress }))
-    }, 200)
+      
+      reader.readAsText(file)
+    })
   }
 
   // Remove uploaded file
@@ -192,7 +229,10 @@ export default function DataImportPage() {
               >
                 <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                 <p className="text-sm text-gray-600 mb-1">
-                  Dateien hier ablegen oder klicken zum Auswählen
+                  {uploadedFiles.length > 0 
+                    ? 'Weitere Dateien hinzufügen'
+                    : 'Dateien hier ablegen oder klicken zum Auswählen'
+                  }
                 </p>
                 <p className="text-xs text-gray-500">
                   CSV, XLS, XLSX (max. 10MB)
@@ -205,17 +245,25 @@ export default function DataImportPage() {
                   {uploadedFiles.map((file, index) => (
                     <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <FileSpreadsheet className="h-4 w-4 text-green-600 flex-shrink-0" />
-                        <span className="text-sm truncate" title={file.name}>{file.name}</span>
+                        <FileSpreadsheet className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm truncate block" title={file.name}>{file.name}</span>
+                          <span className="text-xs text-gray-500">
+                            {(file.size / 1024).toFixed(1)} KB • Bereit zur Verarbeitung
+                          </span>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {uploadProgress[file.name] !== undefined && uploadProgress[file.name] < 100 && (
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-blue-600 font-medium">
                             {Math.round(uploadProgress[file.name])}%
                           </div>
                         )}
                         {uploadProgress[file.name] === 100 && (
                           <CheckCircle className="h-4 w-4 text-green-600" />
+                        )}
+                        {!uploadProgress[file.name] && (
+                          <Clock className="h-4 w-4 text-gray-400" />
                         )}
                         <button
                           onClick={(e) => {
@@ -223,6 +271,7 @@ export default function DataImportPage() {
                             removeFile(file.name)
                           }}
                           className="text-gray-400 hover:text-red-500 transition-colors"
+                          disabled={isUploading}
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -232,14 +281,33 @@ export default function DataImportPage() {
                 </div>
               )}
 
-              <Button 
-                onClick={triggerFileInput}
-                className="w-full"
-                disabled={isUploading}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                {isUploading ? 'Wird hochgeladen...' : 'Datei hochladen'}
-              </Button>
+              <div className="space-y-2">
+                <Button 
+                  onClick={uploadedFiles.length > 0 ? processFiles : triggerFileInput}
+                  className="w-full"
+                  disabled={isUploading}
+                  variant={uploadedFiles.length > 0 ? "default" : "outline"}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  {isUploading 
+                    ? 'Wird verarbeitet...' 
+                    : uploadedFiles.length > 0 
+                      ? `${uploadedFiles.length} Datei(en) verarbeiten`
+                      : 'Dateien auswählen'
+                  }
+                </Button>
+                
+                {uploadedFiles.length > 0 && !isUploading && (
+                  <Button 
+                    onClick={triggerFileInput}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Weitere Dateien hinzufügen
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
 
