@@ -190,10 +190,10 @@ export default function DataImportPage() {
                   
                   return {
                     email: email.trim(),
-                    first_name: firstName?.trim() || null,
-                    last_name: lastName?.trim() || null,
-                    company: company?.trim() || null,
-                    phone: phone?.trim() || null
+                    first_name: firstName?.trim() || undefined,
+                    last_name: lastName?.trim() || undefined,
+                    company: company?.trim() || undefined,
+                    phone: phone?.trim() || undefined
                   }
                 }).filter(customer => customer !== null)
                 
