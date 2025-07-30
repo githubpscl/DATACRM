@@ -1,5 +1,6 @@
 'use client'
 
+import DashboardLayout from '@/components/dashboard/layout'
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -200,26 +201,27 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Kundenmanagement</h1>
-          <p className="text-gray-600 mt-1">
-            Verwalten Sie Ihre Kundendaten und -beziehungen
-          </p>
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Kundenmanagement</h1>
+            <p className="text-gray-600 mt-1">
+              Verwalten Sie Ihre Kundendaten und -beziehungen
+            </p>
+          </div>
+          <div className="flex space-x-3">
+            <Button variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Neuer Kunde
+            </Button>
+          </div>
         </div>
-        <div className="flex space-x-3">
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Neuer Kunde
-          </Button>
-        </div>
-      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -463,6 +465,7 @@ export default function CustomersPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }

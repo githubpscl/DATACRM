@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { apiCall } from '@/components/auth-provider'
+import DashboardLayout from '@/components/dashboard/layout'
 import { 
   Search, 
   Plus, 
@@ -251,22 +252,23 @@ export default function CampaignsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Kampagnen</h1>
-          <p className="text-gray-600 mt-1">
-            Erstellen und verwalten Sie Ihre Marketing-Kampagnen
-          </p>
-        </div>
-        <div className="flex space-x-3">
-          <Button variant="outline">
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Analytics
-          </Button>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Kampagnen</h1>
+            <p className="text-gray-600 mt-1">
+              Erstellen und verwalten Sie Ihre Marketing-Kampagnen
+            </p>
+          </div>
+          <div className="flex space-x-3">
+            <Button variant="outline">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Analytics
+            </Button>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
             Neue Kampagne
           </Button>
         </div>
@@ -522,6 +524,7 @@ export default function CampaignsPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }
