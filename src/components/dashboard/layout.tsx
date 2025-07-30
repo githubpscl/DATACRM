@@ -193,7 +193,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         onClick={() => router.push(subItem.href)}
                         className={`transition-colors px-3 py-2 rounded-md ${
                           isActiveSubItem
-                            ? 'text-blue-700 font-semibold underline decoration-blue-700 decoration-2 text-base'
+                            ? 'text-blue-700 font-semibold underline decoration-blue-700 decoration-2 text-xl'
                             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 text-sm'
                         }`}
                       >
@@ -213,7 +213,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         onClick={() => router.push(subItem.href)}
                         className={`transition-colors px-3 py-2 rounded-md ${
                           isActiveSubItem
-                            ? 'text-blue-700 font-semibold underline decoration-blue-700 decoration-2 text-base'
+                            ? 'text-blue-700 font-semibold underline decoration-blue-700 decoration-2 text-xl'
                             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 text-sm'
                         }`}
                       >
