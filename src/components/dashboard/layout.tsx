@@ -1,12 +1,11 @@
 'use client'
 
-import { ReactNode, useState } from 'react'
+import React, { ReactNode, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
 import { 
   LayoutDashboard,
-  Database,
   Upload,
   Users,
   PenTool,
@@ -21,7 +20,7 @@ import {
 interface NavigationItem {
   name: string
   href: string
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   subItems?: { name: string; href: string }[]
 }
 
