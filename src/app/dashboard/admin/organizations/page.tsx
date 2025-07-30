@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import DashboardLayout from '@/components/dashboard/layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -47,11 +47,7 @@ export default function SuperAdminPage() {
     admin_email: ''
   })
 
-  useEffect(() => {
-    checkAccess()
-  }, [])
-
-  const checkAccess = async () => {
+  const checkAccess = useCallback(async () => {
     try {
       const user = await getCurrentUser()
       if (!user?.email) {
@@ -72,7 +68,11 @@ export default function SuperAdminPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    checkAccess()
+  }, [checkAccess])
 
   const loadOrganizations = async () => {
     try {
@@ -97,7 +97,7 @@ export default function SuperAdminPage() {
 
     setCreating(true)
     try {
-      const { data, error } = await createOrganization({
+      const { error } = await createOrganization({
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         admin_email: formData.admin_email.trim()

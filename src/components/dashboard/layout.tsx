@@ -119,13 +119,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user } = useAuth()
   const [userRole, setUserRole] = useState<string | null>(null)
   const [isSuper, setIsSuper] = useState(false)
-  const [loading, setLoading] = useState(true)
 
   // Check user permissions
   useEffect(() => {
     const checkPermissions = async () => {
       if (!user?.email) {
-        setLoading(false)
         return
       }
 
@@ -139,8 +137,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
       } catch (error) {
         console.error('Error checking permissions:', error)
-      } finally {
-        setLoading(false)
       }
     }
 

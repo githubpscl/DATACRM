@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/dashboard/layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { 
@@ -22,8 +20,6 @@ import {
   Shield, 
   Settings,
   Plus,
-  Check,
-  X,
   Crown,
   Star,
   Key
@@ -44,31 +40,28 @@ interface Permission {
   category: string
 }
 
+interface User {
+  id: string
+  email?: string
+  full_name?: string
+}
+
 interface OrgUser {
   id: string
   user_id: string
   role_id: string
-  user: {
-    id: string
-    email: string
-    full_name?: string
-  }
+  user: User
   role: Role
 }
 
 export default function UserPermissionsPage() {
-  const [currentUser, setCurrentUser] = useState<any>(null)
-  const [currentUserRole, setCurrentUserRole] = useState<any>(null)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [currentUserRole, setCurrentUserRole] = useState<Role | null>(null)
   const [orgUsers, setOrgUsers] = useState<OrgUser[]>([])
   const [roles, setRoles] = useState<Role[]>([])
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedUser, setSelectedUser] = useState<string | null>(null)
   const [showAddUser, setShowAddUser] = useState(false)
-
-  // Form state
-  const [newUserEmail, setNewUserEmail] = useState('')
-  const [selectedRole, setSelectedRole] = useState('')
 
   useEffect(() => {
     loadData()
@@ -104,7 +97,10 @@ export default function UserPermissionsPage() {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleAssignRole = async (userId: string, roleId: string) => {
+    if (!currentUser) return
+    
     try {
       const { error } = await assignRole({
         user_id: userId,
@@ -125,7 +121,10 @@ export default function UserPermissionsPage() {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleAssignPermission = async (userId: string, permissionId: string) => {
+    if (!currentUser) return
+    
     try {
       const { error } = await assignPermission({
         user_id: userId,
@@ -176,7 +175,7 @@ export default function UserPermissionsPage() {
     if (currentUser?.email === 'testdatacrmpascal@gmail.com') return true
     
     // Can only manage users with lower or equal level
-    return currentUserRole?.role?.level >= targetUserRole.level
+    return (currentUserRole?.level || 0) >= targetUserRole.level
   }
 
   if (loading) {
@@ -229,10 +228,10 @@ export default function UserPermissionsPage() {
               </Avatar>
               <div>
                 <p className="font-medium">{currentUser?.email}</p>
-                {currentUserRole?.role && (
-                  <Badge className={getRoleColor(currentUserRole.role)}>
-                    {getRoleIcon(currentUserRole.role.level)}
-                    <span className="ml-1">{currentUserRole.role.name}</span>
+                {currentUserRole && (
+                  <Badge className={getRoleColor(currentUserRole)}>
+                    {getRoleIcon(currentUserRole.level)}
+                    <span className="ml-1">{currentUserRole.name}</span>
                   </Badge>
                 )}
               </div>
@@ -272,7 +271,7 @@ export default function UserPermissionsPage() {
                       <div className="flex items-center gap-3">
                         <Avatar>
                           <AvatarFallback>
-                            {getInitials(orgUser.user.email, orgUser.user.full_name)}
+                            {getInitials(orgUser.user.email || '', orgUser.user.full_name)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
