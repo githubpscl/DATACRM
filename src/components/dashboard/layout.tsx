@@ -28,15 +28,6 @@ interface NavigationItem {
 
 const navigation: NavigationItem[] = [
   {
-    name: 'DataCRM',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-    subItems: [
-      { name: 'Dashboard', href: '/dashboard' },
-      { name: 'Analytics/Statistiken', href: '/dashboard/analytics' }
-    ]
-  },
-  {
     name: 'Datenimport',
     href: '/dashboard/data-import',
     icon: Upload,
@@ -106,7 +97,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Find active main navigation item
   const activeNavItem = navigation.find(item => 
     pathname === item.href || pathname.startsWith(item.href + '/')
-  ) || navigation[0] // Default to first item if none found
+  )
+
+  // Special handling for dashboard and analytics pages
+  const isDashboardPage = pathname === '/dashboard'
+  const isAnalyticsPage = pathname === '/dashboard/analytics'
+  
+  // Dashboard sub-items for when not in any main navigation section
+  const dashboardSubItems = [
+    { name: 'Dashboard', href: '/dashboard' },
+    { name: 'Analytics/Statistiken', href: '/dashboard/analytics' }
+  ]
 
   const handleSignOut = async () => {
     await logout()
@@ -123,7 +124,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center justify-between h-16">
               {/* Logo */}
               <div className="flex items-center">
-                <h1 className="text-xl font-bold text-gray-900 mr-8">DATACRM</h1>
+                <button 
+                  onClick={() => router.push('/dashboard')}
+                  className="text-xl font-bold text-gray-900 mr-8 hover:text-blue-600 transition-colors"
+                >
+                  DATACRM
+                </button>
               </div>
 
               {/* Main Navigation Items */}
@@ -170,22 +176,45 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center h-12">
               <nav className="flex space-x-6">
-                {activeNavItem.subItems.map((subItem) => {
-                  const isActiveSubItem = pathname === subItem.href
-                  return (
-                    <button
-                      key={subItem.name}
-                      onClick={() => router.push(subItem.href)}
-                      className={`text-sm font-medium transition-colors px-3 py-2 rounded-md ${
-                        isActiveSubItem
-                          ? 'text-blue-700 bg-blue-100 border-b-2 border-blue-700'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                      }`}
-                    >
-                      {subItem.name}
-                    </button>
-                  )
-                })}
+                {/* Show dashboard sub-items if on dashboard/analytics pages or no active nav item */}
+                {(isDashboardPage || isAnalyticsPage || !activeNavItem) && 
+                  dashboardSubItems.map((subItem) => {
+                    const isActiveSubItem = pathname === subItem.href
+                    return (
+                      <button
+                        key={subItem.name}
+                        onClick={() => router.push(subItem.href)}
+                        className={`text-sm font-medium transition-colors px-3 py-2 rounded-md ${
+                          isActiveSubItem
+                            ? 'text-blue-700 bg-blue-100 border-b-2 border-blue-700'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                        }`}
+                      >
+                        {subItem.name}
+                      </button>
+                    )
+                  })
+                }
+                
+                {/* Show navigation sub-items if in a main navigation section */}
+                {activeNavItem && !isDashboardPage && !isAnalyticsPage &&
+                  activeNavItem.subItems.map((subItem) => {
+                    const isActiveSubItem = pathname === subItem.href
+                    return (
+                      <button
+                        key={subItem.name}
+                        onClick={() => router.push(subItem.href)}
+                        className={`text-sm font-medium transition-colors px-3 py-2 rounded-md ${
+                          isActiveSubItem
+                            ? 'text-blue-700 bg-blue-100 border-b-2 border-blue-700'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                        }`}
+                      >
+                        {subItem.name}
+                      </button>
+                    )
+                  })
+                }
               </nav>
             </div>
           </div>
