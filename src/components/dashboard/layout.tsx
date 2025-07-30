@@ -86,23 +86,14 @@ const navigation: NavigationItem[] = [
     ]
   },
   {
-    name: 'Administration',
-    href: '/dashboard/admin',
-    icon: Shield,
-    subItems: [
-      { name: 'Organisationen verwalten', href: '/dashboard/admin/organizations' },
-      { name: 'Benutzerberechtigungen', href: '/dashboard/admin/permissions' },
-      { name: 'System-Einstellungen', href: '/dashboard/admin/settings' }
-    ]
-  },
-  {
     name: 'Einstellungen',
     href: '/dashboard/settings',
     icon: Settings,
     subItems: [
       { name: 'Übersicht', href: '/dashboard/settings' },
       { name: 'Profil', href: '/dashboard/settings/profile' },
-      { name: 'Team', href: '/dashboard/settings/team' },
+      { name: 'Team & Berechtigungen', href: '/dashboard/settings/team' },
+      { name: 'Organisationen', href: '/dashboard/settings/organizations' },
       { name: 'Benachrichtigungen', href: '/dashboard/settings/notifications' },
       { name: 'Sicherheit', href: '/dashboard/settings/security' },
       { name: 'Integrationen', href: '/dashboard/settings/integrations' }

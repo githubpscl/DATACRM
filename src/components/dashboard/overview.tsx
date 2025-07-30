@@ -120,8 +120,8 @@ export default function DashboardOverview() {
                   <h4 className="font-medium text-blue-900 mb-2">System-Status & Einrichtung:</h4>
                   <ul className="text-sm text-blue-800 space-y-1">
                     <li>• Führen Sie die SQL-Skripte in Supabase aus (database-setup.sql)</li>
-                    <li>• Testen Sie die Organisation-Erstellung im Admin-Bereich</li>
-                    <li>• Konfigurieren Sie Rollen und Berechtigungen</li>
+                    <li>• Verwalten Sie Organisationen unter Einstellungen → Organisationen</li>
+                    <li>• Team & Berechtigungen unter Einstellungen → Team & Berechtigungen</li>
                     <li>• Session automatisch gespeichert (10 Min. Inaktivitäts-Timeout)</li>
                   </ul>
                 </div>
