@@ -178,13 +178,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Sub Navigation (Unterraster) */}
         <div className="bg-gray-50 border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center h-12">
+            <div className="flex items-center justify-between h-12">
               <nav className="flex space-x-6">
                 {/* Show dashboard sub-items if on dashboard/analytics pages or no active nav item */}
                 {(isDashboardPage || isAnalyticsPage || !activeNavItem) && 
                   dashboardSubItems.map((subItem) => {
                     const isActiveSubItem = pathname === subItem.href
-                    console.log(`Dashboard sub-item: ${subItem.name}, href: ${subItem.href}, pathname: ${pathname}, isActive: ${isActiveSubItem}`)
                     return (
                       <button
                         key={subItem.name}
@@ -211,7 +210,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 {activeNavItem && !isDashboardPage && !isAnalyticsPage &&
                   activeNavItem.subItems.map((subItem) => {
                     const isActiveSubItem = pathname === subItem.href
-                    console.log(`Checking sub-item: ${subItem.name}, href: ${subItem.href}, pathname: ${pathname}, isActive: ${isActiveSubItem}`)
                     return (
                       <button
                         key={subItem.name}
@@ -234,6 +232,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   })
                 }
               </nav>
+              
+              {/* Debug Info - Visible on page */}
+              <div className="text-xs text-gray-500 bg-yellow-100 px-2 py-1 rounded">
+                Path: {pathname} | Nav: {activeNavItem?.name || 'none'}
+              </div>
             </div>
           </div>
         </div>
