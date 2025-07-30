@@ -98,7 +98,11 @@ export default function OrganizationsPage() {
 
     setCreating(true)
     try {
-      const { data, error } = await createOrganization(newOrgName, newOrgDomain || undefined)
+      const { data, error } = await createOrganization({
+        name: newOrgName,
+        description: newOrgDomain || undefined,
+        admin_email: user?.email || ''
+      })
       
       if (error) {
         console.error('Error creating organization:', error)
