@@ -122,12 +122,60 @@ export const createOrganization = async (org: {
   description?: string
   admin_email: string
 }) => {
-  const { data, error } = await supabase
-    .from('organizations')
-    .insert([org])
-    .select()
-  
-  return { data, error }
+  try {
+    console.log('Creating organization:', org)
+    
+    // First, try to check if the table exists by doing a simple query
+    const { data: testData, error: testError } = await supabase
+      .from('organizations')
+      .select('count')
+      .limit(1)
+    
+    console.log('Table test result:', { testData, testError })
+    
+    if (testError) {
+      console.error('Organizations table does not exist or is not accessible:', testError)
+      return { 
+        data: null, 
+        error: { 
+          message: 'Database table "organizations" not found. Please run the database setup script first.',
+          details: testError
+        } 
+      }
+    }
+    
+    // If table exists, try to insert
+    const insertData = {
+      name: org.name,
+      admin_email: org.admin_email,
+      domain: org.description || null
+    }
+    
+    console.log('Inserting data:', insertData)
+    
+    const { data, error } = await supabase
+      .from('organizations')
+      .insert([insertData])
+      .select()
+    
+    console.log('Insert result:', { data, error })
+    
+    if (error) {
+      console.error('Insert error:', error)
+      return { data: null, error }
+    }
+    
+    return { data, error: null }
+  } catch (err) {
+    console.error('Unexpected error in createOrganization:', err)
+    return { 
+      data: null, 
+      error: { 
+        message: err instanceof Error ? err.message : 'Unknown error occurred',
+        details: err
+      } 
+    }
+  }
 }
 
 // User roles and permissions

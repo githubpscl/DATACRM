@@ -97,15 +97,19 @@ export default function SuperAdminPage() {
 
     setCreating(true)
     try {
-      const { error } = await createOrganization({
+      console.log('Creating organization with data:', formData)
+      
+      const result = await createOrganization({
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         admin_email: formData.admin_email.trim()
       })
+      
+      console.log('CreateOrganization result:', result)
 
-      if (error) {
-        console.error('Error creating organization:', error)
-        alert(`Fehler beim Erstellen der Organisation: ${error.message}`)
+      if (result.error) {
+        console.error('Error creating organization:', result.error)
+        alert(`Fehler beim Erstellen der Organisation: ${result.error.message || 'Unbekannter Fehler'}`)
       } else {
         alert(`✅ Organisation "${formData.name}" erfolgreich erstellt!`)
         setFormData({ name: '', description: '', admin_email: '' })
@@ -113,8 +117,8 @@ export default function SuperAdminPage() {
         await loadOrganizations()
       }
     } catch (error) {
-      console.error('Error creating organization:', error)
-      alert('Fehler beim Erstellen der Organisation.')
+      console.error('Unexpected error creating organization:', error)
+      alert(`Fehler beim Erstellen der Organisation: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`)
     } finally {
       setCreating(false)
     }
