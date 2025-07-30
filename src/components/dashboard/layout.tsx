@@ -4,13 +4,14 @@ import React, { ReactNode } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
+import UserDropdown from '@/components/ui/user-dropdown'
 import { 
   Upload,
   Users,
   PenTool,
   GitBranch,
   Megaphone,
-  LogOut
+  Settings
 } from 'lucide-react'
 
 interface SubNavItem {
@@ -81,6 +82,19 @@ const navigation: NavigationItem[] = [
       { name: 'Kampagne bearbeiten', href: '/dashboard/campaigns/edit' },
       { name: 'KI-Zusammenfassung', href: '/dashboard/campaigns/ai-insights' }
     ]
+  },
+  {
+    name: 'Einstellungen',
+    href: '/dashboard/settings',
+    icon: Settings,
+    subItems: [
+      { name: 'Übersicht', href: '/dashboard/settings' },
+      { name: 'Profil', href: '/dashboard/settings/profile' },
+      { name: 'Team', href: '/dashboard/settings/team' },
+      { name: 'Benachrichtigungen', href: '/dashboard/settings/notifications' },
+      { name: 'Sicherheit', href: '/dashboard/settings/security' },
+      { name: 'Integrationen', href: '/dashboard/settings/integrations' }
+    ]
   }
 ]
 
@@ -89,7 +103,6 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { logout } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -115,10 +128,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Analytics/Statistiken', href: '/dashboard/analytics' }
   ]
-
-  const handleSignOut = async () => {
-    await logout()
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -164,15 +173,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
               {/* User Actions */}
               <div className="flex items-center space-x-4">
-                <Button
-                  onClick={handleSignOut}
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Abmelden
-                </Button>
+                <UserDropdown 
+                  userName="Max Mustermann" 
+                  userEmail="max@example.com" 
+                />
               </div>
             </div>
           </div>

@@ -13,7 +13,9 @@ import {
   CreditCard,
   Database,
   Mail,
-  Smartphone
+  Smartphone,
+  Settings,
+  ChevronRight
 } from 'lucide-react'
 
 const settingsSections = [
@@ -102,20 +104,23 @@ export default function SettingsPage() {
           {settingsSections.map((section) => {
             const Icon = section.icon
             return (
-              <Card key={section.name} className="hover:shadow-lg transition-shadow cursor-pointer group">
+              <Card key={section.name} className="hover:shadow-md transition-all duration-200 cursor-pointer group border border-gray-200 hover:border-blue-300">
                 <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-lg bg-${section.color}-100 group-hover:bg-${section.color}-200 transition-colors`}>
-                      <Icon className={`h-6 w-6 text-${section.color}-600`} />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className={`p-3 rounded-lg bg-${section.color}-100 group-hover:bg-${section.color}-200 transition-colors`}>
+                        <Icon className={`h-6 w-6 text-${section.color}-600`} />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                          {section.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {section.description}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-gray-700">
-                        {section.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {section.description}
-                      </p>
-                    </div>
+                    <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
                   </div>
                 </CardContent>
               </Card>
