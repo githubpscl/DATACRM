@@ -2,3 +2,46 @@ UI anpassen, Dashboard bei Name, Kopfzeile immer zu sehen, aktuell ausgewähltes
 AI, wie funktioniert
 Karte, Möglichkeit einfach karte abbilden lassen und zum Beispiel Agent für umwandeln in automatisch erkennbare Adressen/ kostenlose API, die es auf der Karte darstellen kann
 Testdaten aus Dashboard entfernen
+
+
+
+
+UI:
+0. DataCRM
+- Dashboard
+- Analytics/ Statistics
+1. datenimport
+- Daten hinzufügen
+- Komplett neue Daten importieren
+- Automatisches Daten synchronisieren erstellen
+- Übersichten zu Statistiken wie viele wann hinzugefügt und so weiter 
+- Ki basierte Zusammenfassung der Statistiken bzw spannendsten Ergebnisse, ggf. mit ursachenanalyse -> handlungsempfehlungen
+2. Datenmanagement
+- Alle Daten
+- Nach Segmenten filtern
+- Kartenansicht nach Regionen
+- Deduplizierungs Regeln und so weiter 
+3. content builder (inkl personalisierung plus Template von firma(Logo, Werbeslogan…))
+- Email builder mit Newslettern
+- WhatsApp Studio
+- SMS builder
+4. journeys
+- Customer journeys automatisieren
+- Übersichtsansicht: Ki basierte Zusammenfassung der journeys sowie ein Bild
+- Eigene Seite mit Drag and Drops zum erstellen bzw. bearbeiten der journeys
+5. Kampagnen
+- Kampagnen erstellen können
+- Übersichtsansicht: Ki basierte Zusammenfassung der Kampagnen sowie ein Bild
+- Eigene Seite mit Drag and Drops zum erstellen bzw. bearbeiten der Kampagnen
+
+
+
+AI:
+Zum Beispiel auf Grundlage der Daten Empfehlungen, welche Aktion als Nächstes am sinnvollsten ist, zum Beispiel bestimmte Gruppe adressieren oder Daten bearbeiten 
+Vorschlagen von Kampagnen und Customer journeys, zudem wörtlich beschreiben sodass automatisch rauskommt
+A/B Tests, Agenten sollen automatisch erkennen was besser läuft und reagieren
+Ki gestützte marktsegmentierung und käufergruppen -> automatische Empfehlungen 
+Ggf agentic process automation: Tools dynamisch aufrufen, zielorientierte Entscheidungsfindung in die Automatisierung einfügen
+Bei email builder nur den Code den man bearbeiten kann und nebendran ein chatbot bzw. Agenten dem man Anweisungen geben kann, der dann Dinge im Code ändern kann, die man akzeptieren kann oder nicht (wie GitHub Copilot)
+
+
