@@ -191,10 +191,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <button
                         key={subItem.name}
                         onClick={() => router.push(subItem.href)}
-                        className={`text-sm transition-colors px-3 py-2 rounded-md ${
+                        className={`transition-colors px-3 py-2 rounded-md ${
                           isActiveSubItem
-                            ? 'text-blue-700 font-semibold underline decoration-blue-700 decoration-2'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                            ? 'text-blue-700 font-semibold underline decoration-blue-700 decoration-2 text-base'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 text-sm'
                         }`}
                       >
                         {subItem.name}
@@ -211,10 +211,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <button
                         key={subItem.name}
                         onClick={() => router.push(subItem.href)}
-                        className={`text-sm transition-colors px-3 py-2 rounded-md ${
+                        className={`transition-colors px-3 py-2 rounded-md ${
                           isActiveSubItem
-                            ? 'text-blue-700 font-semibold underline decoration-blue-700 decoration-2'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                            ? 'text-blue-700 font-semibold underline decoration-blue-700 decoration-2 text-base'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 text-sm'
                         }`}
                       >
                         {subItem.name}
