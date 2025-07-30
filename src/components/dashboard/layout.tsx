@@ -181,7 +181,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Sub Navigation (Unterraster) */}
         <div className="bg-gray-50 border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-12">
+            <div className="flex items-center h-12">
               <nav className="flex space-x-6">
                 {/* Show dashboard sub-items if on dashboard/analytics pages or no active nav item */}
                 {(isDashboardPage || isAnalyticsPage || !activeNavItem) && 
@@ -191,19 +191,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <button
                         key={subItem.name}
                         onClick={() => router.push(subItem.href)}
-                        className={`relative text-sm transition-colors px-4 py-2 rounded-md border-2 ${
+                        className={`text-sm transition-colors px-3 py-2 rounded-md ${
                           isActiveSubItem
-                            ? 'text-white bg-blue-600 border-blue-700 shadow-md font-semibold'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-transparent'
+                            ? 'text-blue-700 font-semibold underline decoration-blue-700 decoration-2'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                         }`}
                       >
                         {subItem.name}
-                        {isActiveSubItem && (
-                          <>
-                            <div className="absolute -top-1 -left-1 -right-1 -bottom-1 bg-blue-500 rounded-md -z-10 animate-pulse"></div>
-                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400 rounded-full"></div>
-                          </>
-                        )}
                       </button>
                     )
                   })
@@ -217,29 +211,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <button
                         key={subItem.name}
                         onClick={() => router.push(subItem.href)}
-                        className={`relative text-sm transition-colors px-4 py-2 rounded-md border-2 ${
+                        className={`text-sm transition-colors px-3 py-2 rounded-md ${
                           isActiveSubItem
-                            ? 'text-white bg-blue-600 border-blue-700 shadow-md font-semibold'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-transparent'
+                            ? 'text-blue-700 font-semibold underline decoration-blue-700 decoration-2'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                         }`}
                       >
                         {subItem.name}
-                        {isActiveSubItem && (
-                          <>
-                            <div className="absolute -top-1 -left-1 -right-1 -bottom-1 bg-blue-500 rounded-md -z-10 animate-pulse"></div>
-                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400 rounded-full"></div>
-                          </>
-                        )}
                       </button>
                     )
                   })
                 }
               </nav>
-              
-              {/* Debug Info - Visible on page */}
-              <div className="text-xs text-gray-500 bg-yellow-100 px-2 py-1 rounded">
-                Path: {normalizedPathname} | Nav: {activeNavItem?.name || 'none'}
-              </div>
             </div>
           </div>
         </div>
