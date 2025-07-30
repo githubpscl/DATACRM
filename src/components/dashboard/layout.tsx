@@ -96,16 +96,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Debug logging
   console.log('Current pathname:', pathname)
 
+  // Normalize pathname by removing trailing slash
+  const normalizedPathname = pathname.endsWith('/') && pathname !== '/' ? pathname.slice(0, -1) : pathname
+
   // Find active main navigation item
   const activeNavItem = navigation.find(item => 
-    pathname === item.href || pathname.startsWith(item.href + '/')
+    normalizedPathname === item.href || normalizedPathname.startsWith(item.href + '/')
   )
 
   console.log('Active nav item:', activeNavItem?.name)
 
   // Special handling for dashboard and analytics pages
-  const isDashboardPage = pathname === '/dashboard'
-  const isAnalyticsPage = pathname === '/dashboard/analytics'
+  const isDashboardPage = normalizedPathname === '/dashboard'
+  const isAnalyticsPage = normalizedPathname === '/dashboard/analytics'
   
   // Dashboard sub-items for when not in any main navigation section
   const dashboardSubItems = [
@@ -139,7 +142,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               {/* Main Navigation Items */}
               <nav className="flex space-x-8 flex-1">
                 {navigation.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                  const isActive = normalizedPathname === item.href || normalizedPathname.startsWith(item.href + '/')
                   const Icon = item.icon
 
                   return (
@@ -183,7 +186,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 {/* Show dashboard sub-items if on dashboard/analytics pages or no active nav item */}
                 {(isDashboardPage || isAnalyticsPage || !activeNavItem) && 
                   dashboardSubItems.map((subItem) => {
-                    const isActiveSubItem = pathname === subItem.href
+                    const isActiveSubItem = normalizedPathname === subItem.href
                     return (
                       <button
                         key={subItem.name}
@@ -209,7 +212,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 {/* Show navigation sub-items if in a main navigation section */}
                 {activeNavItem && !isDashboardPage && !isAnalyticsPage &&
                   activeNavItem.subItems.map((subItem) => {
-                    const isActiveSubItem = pathname === subItem.href
+                    const isActiveSubItem = normalizedPathname === subItem.href
                     return (
                       <button
                         key={subItem.name}
@@ -235,7 +238,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               
               {/* Debug Info - Visible on page */}
               <div className="text-xs text-gray-500 bg-yellow-100 px-2 py-1 rounded">
-                Path: {pathname} | Nav: {activeNavItem?.name || 'none'}
+                Path: {normalizedPathname} | Nav: {activeNavItem?.name || 'none'}
               </div>
             </div>
           </div>
