@@ -5,7 +5,6 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
 import { 
-  LayoutDashboard,
   Upload,
   Users,
   PenTool,
