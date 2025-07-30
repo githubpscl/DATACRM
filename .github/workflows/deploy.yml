@@ -38,9 +38,9 @@ jobs:
       - name: Build with Next.js
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'https://your-project.supabase.co' }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: https://izqsytgmmykxtuwivpkd.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6cXN5dGdtbXlreHR1d2l2cGtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4MjcyNjIsImV4cCI6MjA2OTQwMzI2Mn0.mnMppDgUQjywUmVgGh87vq-jGRlFRFOr19Bc9nas43M
+          NEXT_PUBLIC_APP_NAME: DataCRM
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

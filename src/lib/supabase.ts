@@ -3,6 +3,19 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
+// Dynamically determine the correct redirect URL
+const getRedirectUrl = () => {
+  if (typeof window === 'undefined') return 'https://githubpscl.github.io/DATACRM'
+  
+  // For local development
+  if (window.location.hostname === 'localhost') {
+    return 'http://localhost:3000'
+  }
+  
+  // For production (GitHub Pages)
+  return 'https://githubpscl.github.io/DATACRM'
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Auth helpers
@@ -10,6 +23,9 @@ export const signUp = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      emailRedirectTo: getRedirectUrl()
+    }
   })
   return { data, error }
 }
