@@ -171,7 +171,7 @@ export default function DataImportPage() {
             skipEmptyLines: true,
             complete: async (results) => {
               try {
-                const csvData = results.data as any[]
+                const csvData = results.data as Record<string, string>[]
                 
                 // Update progress to show data validation
                 setUploadProgress(prev => ({ ...prev, [file.name]: 30 }))
@@ -238,7 +238,7 @@ export default function DataImportPage() {
                 reject(error)
               }
             },
-            error: (error: any) => {
+            error: (error: Error) => {
               console.error('CSV parsing error:', error)
               alert(`Fehler beim Lesen der CSV-Datei ${file.name}: ${error.message}`)
               setUploadProgress(prev => ({ ...prev, [file.name]: 0 }))

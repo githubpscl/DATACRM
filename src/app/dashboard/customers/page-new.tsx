@@ -13,6 +13,7 @@ import {
   Download, 
   Mail, 
   Phone, 
+  Building2,
   User,
   Edit,
   MoreVertical
@@ -41,7 +42,6 @@ export default function CustomersPage() {
 
   useEffect(() => {
     filterCustomers()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customers, searchTerm])
 
   const loadCustomers = async () => {
