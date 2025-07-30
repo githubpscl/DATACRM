@@ -5,17 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
-  Settings, 
   User,
   Users,
   Plug,
   Bell,
   Shield,
   CreditCard,
-  Globe,
-  Palette,
   Database,
-  Key,
   Mail,
   Smartphone
 } from 'lucide-react'

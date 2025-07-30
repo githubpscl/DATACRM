@@ -1,0 +1,4 @@
+UI anpassen, Dashboard bei Name, Kopfzeile immer zu sehen, aktuell ausgewähltes markiert
+AI, wie funktioniert
+Karte, Möglichkeit einfach karte abbilden lassen und zum Beispiel Agent für umwandeln in automatisch erkennbare Adressen/ kostenlose API, die es auf der Karte darstellen kann
+Testdaten aus Dashboard entfernen

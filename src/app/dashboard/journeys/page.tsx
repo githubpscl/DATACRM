@@ -11,7 +11,6 @@ import {
   Pause,
   BarChart3,
   Users,
-  Mail,
   Clock,
   TrendingUp,
   Bot,
@@ -154,7 +153,7 @@ export default function CustomerJourneysPage() {
               <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg">
                 <h4 className="font-medium text-blue-900">🚀 Performance-Optimierung</h4>
                 <p className="text-sm text-blue-800 mt-2">
-                  Die "Abandoned Cart Recovery" Journey zeigt die beste Performance mit 42.1% Conversion. 
+                  Die &quot;Abandoned Cart Recovery&quot; Journey zeigt die beste Performance mit 42.1% Conversion. 
                   Erwägen Sie ähnliche Timing-Strategien für andere Journeys.
                 </p>
               </div>
