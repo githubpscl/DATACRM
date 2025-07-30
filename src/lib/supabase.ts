@@ -207,7 +207,7 @@ export const getUserPermissions = async (userId: string, orgId?: string) => {
   return { data, error }
 }
 
-export const assignRole = async (assignment: {
+export const assignUserRole = async (assignment: {
   user_id: string
   role_id: string
   org_id?: string
@@ -269,4 +269,106 @@ export const getOrgUsers = async (orgId: string) => {
 // Check if user is super admin
 export const isSuperAdmin = async (userEmail: string) => {
   return userEmail === 'testdatacrmpascal@gmail.com'
+}
+
+// Check if user is organization admin
+export const isOrgAdmin = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('role', 'org_admin')
+      .single()
+    
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking org admin status:', error)
+      return false
+    }
+    
+    return !!data
+  } catch (error) {
+    console.error('Error in isOrgAdmin:', error)
+    return false
+  }
+}
+
+// Get user roles with organization and user details
+export const getUserRoles = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select(`
+        id,
+        user_id,
+        organization_id,
+        role,
+        created_at,
+        organization:organizations!organization_id(name)
+      `)
+    
+    if (error) {
+      console.error('Error getting user roles:', error)
+      return { data: [], error }
+    }
+    
+    // Add mock user data since we can't access auth.users directly
+    const rolesWithUser = data?.map(role => ({
+      ...role,
+      user: {
+        email: `user-${role.user_id.slice(0, 8)}@example.com`
+      }
+    })) || []
+    
+    return { data: rolesWithUser, error: null }
+  } catch (error) {
+    console.error('Error in getUserRoles:', error)
+    return { data: [], error }
+  }
+}
+
+// Assign role to user
+export const assignRole = async (userId: string, role: 'super_admin' | 'org_admin' | 'user' | 'viewer', organizationId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .upsert({
+        user_id: userId,
+        organization_id: organizationId,
+        role: role,
+        created_at: new Date().toISOString()
+      })
+      .select()
+    
+    if (error) {
+      console.error('Error assigning role:', error)
+      return { data: null, error }
+    }
+    
+    return { data, error: null }
+  } catch (error) {
+    console.error('Error in assignRole:', error)
+    return { data: null, error }
+  }
+}
+
+// Remove role from user
+export const removeRole = async (userId: string, organizationId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .delete()
+      .eq('user_id', userId)
+      .eq('organization_id', organizationId)
+    
+    if (error) {
+      console.error('Error removing role:', error)
+      return { data: null, error }
+    }
+    
+    return { data, error: null }
+  } catch (error) {
+    console.error('Error in removeRole:', error)
+    return { data: null, error }
+  }
 }

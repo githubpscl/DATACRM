@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { 
   getOrganizations, 
-  getUsers, 
   getUserRoles, 
   assignRole, 
   removeRole, 
@@ -19,16 +18,12 @@ import {
 } from '@/lib/supabase'
 import { 
   Users,
-  Plus,
-  Settings,
   Shield,
   Crown,
   Mail,
   UserPlus,
-  Edit,
   Trash2,
   Send,
-  CheckCircle,
   AlertCircle,
   Loader2
 } from 'lucide-react'
@@ -63,7 +58,6 @@ interface Organization {
 
 export default function TeamPage() {
   const { user } = useAuth()
-  const [users, setUsers] = useState<User[]>([])
   const [userRoles, setUserRoles] = useState<UserRole[]>([])
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [isSuper, setIsSuper] = useState(false)
@@ -93,10 +87,7 @@ export default function TeamPage() {
         const { data: orgs } = await getOrganizations()
         setOrganizations(orgs || [])
 
-        // Load users and roles
-        const { data: usersData } = await getUsers()
-        setUsers(usersData || [])
-
+        // Load user roles
         const { data: rolesData } = await getUserRoles()
         setUserRoles(rolesData || [])
 
@@ -147,7 +138,7 @@ export default function TeamPage() {
 
   const handleChangeRole = async (userId: string, newRole: string, orgId: string) => {
     try {
-      const { error } = await assignRole(userId, newRole as any, orgId)
+      const { error } = await assignRole(userId, newRole as 'super_admin' | 'org_admin' | 'user' | 'viewer', orgId)
       if (error) {
         console.error('Error changing role:', error)
         alert('Fehler beim Ändern der Rolle.')
@@ -286,7 +277,7 @@ export default function TeamPage() {
                   <select
                     id="inviteRole"
                     value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value as any)}
+                    onChange={(e) => setInviteRole(e.target.value as 'org_admin' | 'user' | 'viewer')}
                     className="w-full p-2 border rounded-md"
                   >
                     <option value="viewer">Betrachter</option>
