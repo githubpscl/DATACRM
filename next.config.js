@@ -14,9 +14,6 @@ const nextConfig = {
   },
   // Exclude backend directory
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
-  experimental: {
-    esmExternals: 'loose'
-  },
   webpack: (config, { isServer }) => {
     // Ignore backend files during webpack compilation
     config.module.rules.push({

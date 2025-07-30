@@ -14,7 +14,6 @@ import {
   Database,
   Mail,
   Smartphone,
-  Settings,
   ChevronRight
 } from 'lucide-react'
 

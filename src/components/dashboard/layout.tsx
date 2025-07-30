@@ -2,8 +2,6 @@
 
 import React, { ReactNode } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useAuth } from '@/components/auth-provider'
-import { Button } from '@/components/ui/button'
 import UserDropdown from '@/components/ui/user-dropdown'
 import { 
   Upload,
