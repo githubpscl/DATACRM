@@ -183,10 +183,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <button
                         key={subItem.name}
                         onClick={() => router.push(subItem.href)}
-                        className={`text-sm font-medium transition-colors px-3 py-2 rounded-md ${
+                        className={`text-sm transition-colors px-3 py-2 rounded-md ${
                           isActiveSubItem
-                            ? 'text-blue-700 bg-blue-100 border-b-2 border-blue-700'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                            ? 'text-blue-700 bg-blue-100 border-b-2 border-blue-700 font-bold'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-medium'
                         }`}
                       >
                         {subItem.name}
@@ -203,10 +203,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <button
                         key={subItem.name}
                         onClick={() => router.push(subItem.href)}
-                        className={`text-sm font-medium transition-colors px-3 py-2 rounded-md ${
+                        className={`text-sm transition-colors px-3 py-2 rounded-md ${
                           isActiveSubItem
-                            ? 'text-blue-700 bg-blue-100 border-b-2 border-blue-700'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                            ? 'text-blue-700 bg-blue-100 border-b-2 border-blue-700 font-bold'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-medium'
                         }`}
                       >
                         {subItem.name}
