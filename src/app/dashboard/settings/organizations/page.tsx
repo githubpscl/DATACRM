@@ -9,8 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { 
   createOrganization, 
   getOrganizations, 
-  isSuperAdmin,
-  assignRole
+  isSuperAdmin
 } from '@/lib/supabase'
 import { 
   Building,

@@ -100,6 +100,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  // Clear session from localStorage
+  const clearSession = useCallback(() => {
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(LAST_ACTIVITY_KEY)
+    } catch (error) {
+      console.error('Error clearing session:', error)
+    }
+  }, [])
+
   // Load session from localStorage
   const loadSession = useCallback(() => {
     try {
@@ -127,17 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearSession()
     }
     return false
-  }, [])
-
-  // Clear session from localStorage
-  const clearSession = useCallback(() => {
-    try {
-      localStorage.removeItem(STORAGE_KEY)
-      localStorage.removeItem(LAST_ACTIVITY_KEY)
-    } catch (error) {
-      console.error('Error clearing session:', error)
-    }
-  }, [])
+  }, [clearSession])
 
   // Update last activity timestamp
   const updateLastActivity = useCallback(() => {
@@ -163,19 +163,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set new timer
     inactivityTimerRef.current = setTimeout(() => {
       console.log('Session expired due to inactivity')
+      // Call logout function directly
       logout()
     }, SESSION_TIMEOUT)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateLastActivity])
 
-  // Check session validity periodically
+  // Check session validity periodically  
   const checkSessionValidity = useCallback(() => {
     const lastActivity = parseInt(localStorage.getItem(LAST_ACTIVITY_KEY) || '0')
     const now = Date.now()
     
     if (user && now - lastActivity > SESSION_TIMEOUT) {
       console.log('Session expired during validity check')
+      // Call logout function directly
       logout()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   useEffect(() => {
@@ -380,7 +384,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       // Clear timers
       if (inactivityTimerRef.current) {
@@ -404,7 +408,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(null)
       router.push('/login')
     }
-  }
+  }, [clearSession, router])
 
   const value: AuthContextType = {
     user,

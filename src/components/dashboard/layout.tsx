@@ -12,8 +12,7 @@ import {
   PenTool,
   GitBranch,
   Megaphone,
-  Settings,
-  Shield
+  Settings
 } from 'lucide-react'
 
 interface SubNavItem {
