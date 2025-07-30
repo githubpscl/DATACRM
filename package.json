@@ -51,6 +51,7 @@
     "next": "^14.0.4",
     "next-auth": "^4.24.5",
     "next-themes": "^0.2.1",
+    "papaparse": "^5.5.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.48.2",
@@ -64,6 +65,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.10.5",
+    "@types/papaparse": "^5.3.16",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
     "autoprefixer": "^10.4.16",

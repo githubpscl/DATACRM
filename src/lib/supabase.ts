@@ -73,6 +73,21 @@ export const addCustomer = async (customer: {
   return { data, error }
 }
 
+export const addCustomersBulk = async (customers: {
+  email: string
+  first_name?: string
+  last_name?: string
+  company?: string
+  phone?: string
+}[]) => {
+  const { data, error } = await supabase
+    .from('customers')
+    .insert(customers)
+    .select()
+  
+  return { data, error }
+}
+
 export const updateCustomer = async (id: string, updates: Record<string, unknown>) => {
   const { data, error } = await supabase
     .from('customers')

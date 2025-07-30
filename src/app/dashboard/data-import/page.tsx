@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Papa from 'papaparse'
 import DashboardLayout from '@/components/dashboard/layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { addCustomersBulk } from '@/lib/supabase'
 import { 
   Upload,
   Database,
@@ -120,48 +122,142 @@ export default function DataImportPage() {
     }
 
     setIsUploading(true)
+    let successCount = 0
+    let failCount = 0
 
     for (const file of uploadedFiles) {
-      await processFile(file)
+      try {
+        await processFile(file)
+        successCount++
+      } catch (error) {
+        failCount++
+        console.error(`Failed to process ${file.name}:`, error)
+      }
     }
 
     setIsUploading(false)
-    alert(`${uploadedFiles.length} Datei(en) erfolgreich verarbeitet!`)
     
-    // Clear the uploaded files after successful processing
-    setUploadedFiles([])
-    setUploadProgress({})
+    // Show final summary
+    if (successCount > 0 && failCount === 0) {
+      alert(`🎉 Alle ${successCount} Datei(en) erfolgreich verarbeitet! Die Daten sind jetzt in Ihrer Datenbank verfügbar.`)
+    } else if (successCount > 0 && failCount > 0) {
+      alert(`⚠️ ${successCount} Datei(en) erfolgreich verarbeitet, ${failCount} Datei(en) fehlgeschlagen.`)
+    } else {
+      alert(`❌ Alle ${failCount} Datei(en) konnten nicht verarbeitet werden.`)
+    }
+    
+    // Clear the uploaded files after processing attempt
+    if (successCount > 0) {
+      setUploadedFiles([])
+      setUploadProgress({})
+    }
   }
 
   // Process individual file
   const processFile = async (file: File): Promise<void> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader()
       
-      reader.onload = (e) => {
-        const content = e.target?.result as string
-        
-        // Simulate processing with progress
-        let progress = 0
-        const interval = setInterval(() => {
-          progress += Math.random() * 20 + 10 // Faster progress for actual processing
+      reader.onload = async (e) => {
+        try {
+          const content = e.target?.result as string
           
-          if (progress >= 100) {
-            progress = 100
-            clearInterval(interval)
-            
-            // Here you would normally send the data to your backend API
-            console.log(`Processing file: ${file.name}`)
-            console.log(`File content preview:`, content.substring(0, 200) + '...')
-            
-            // Simulate API call
-            setTimeout(() => {
-              resolve()
-            }, 500)
-          }
+          // Update progress to show parsing
+          setUploadProgress(prev => ({ ...prev, [file.name]: 10 }))
           
-          setUploadProgress(prev => ({ ...prev, [file.name]: progress }))
-        }, 100)
+          // Parse CSV data
+          Papa.parse(content, {
+            header: true,
+            skipEmptyLines: true,
+            complete: async (results) => {
+              try {
+                const csvData = results.data as any[]
+                
+                // Update progress to show data validation
+                setUploadProgress(prev => ({ ...prev, [file.name]: 30 }))
+                
+                // Map CSV columns to database fields
+                const customers = csvData.map((row) => {
+                  // Try different common column name variations
+                  const email = row.email || row.Email || row.EMAIL || row['E-Mail'] || row.mail
+                  const firstName = row.first_name || row.First_Name || row.firstname || row.Vorname || row['First Name']
+                  const lastName = row.last_name || row.Last_Name || row.lastname || row.Nachname || row['Last Name']
+                  const company = row.company || row.Company || row.Unternehmen || row.Firma
+                  const phone = row.phone || row.Phone || row.Telefon || row.Tel || row['Phone Number']
+                  
+                  // Skip rows without email
+                  if (!email) return null
+                  
+                  return {
+                    email: email.trim(),
+                    first_name: firstName?.trim() || null,
+                    last_name: lastName?.trim() || null,
+                    company: company?.trim() || null,
+                    phone: phone?.trim() || null
+                  }
+                }).filter(customer => customer !== null)
+                
+                console.log(`Parsed ${customers.length} customers from ${file.name}`)
+                
+                // Update progress to show database insertion
+                setUploadProgress(prev => ({ ...prev, [file.name]: 60 }))
+                
+                // Insert data into Supabase
+                if (customers.length > 0) {
+                  const { data, error } = await addCustomersBulk(customers)
+                  
+                  if (error) {
+                    console.error('Database error:', error)
+                    alert(`Fehler beim Speichern der Daten aus ${file.name}: ${error.message}`)
+                    setUploadProgress(prev => ({ ...prev, [file.name]: 0 }))
+                    reject(error)
+                    return
+                  }
+                  
+                  console.log(`Successfully inserted ${data?.length || customers.length} customers`)
+                  
+                  // Complete progress
+                  setUploadProgress(prev => ({ ...prev, [file.name]: 100 }))
+                  
+                  // Show success message with details
+                  setTimeout(() => {
+                    alert(`✅ ${file.name}: ${customers.length} Kundendaten erfolgreich importiert!`)
+                  }, 500)
+                  
+                } else {
+                  alert(`⚠️ ${file.name}: Keine gültigen Kundendaten gefunden. Stellen Sie sicher, dass die Datei eine 'email' Spalte enthält.`)
+                  setUploadProgress(prev => ({ ...prev, [file.name]: 0 }))
+                }
+                
+                resolve()
+                
+              } catch (error) {
+                console.error('Processing error:', error)
+                alert(`Fehler beim Verarbeiten von ${file.name}: ${error}`)
+                setUploadProgress(prev => ({ ...prev, [file.name]: 0 }))
+                reject(error)
+              }
+            },
+            error: (error: any) => {
+              console.error('CSV parsing error:', error)
+              alert(`Fehler beim Lesen der CSV-Datei ${file.name}: ${error.message}`)
+              setUploadProgress(prev => ({ ...prev, [file.name]: 0 }))
+              reject(error)
+            }
+          })
+          
+        } catch (error) {
+          console.error('File reading error:', error)
+          alert(`Fehler beim Lesen der Datei ${file.name}`)
+          setUploadProgress(prev => ({ ...prev, [file.name]: 0 }))
+          reject(error)
+        }
+      }
+      
+      reader.onerror = () => {
+        alert(`Fehler beim Lesen der Datei ${file.name}`)
+        setUploadProgress(prev => ({ ...prev, [file.name]: 0 }))
+        reject(new Error('File reading failed'))
       }
       
       reader.readAsText(file)
