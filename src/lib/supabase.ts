@@ -106,3 +106,119 @@ export const deleteCustomer = async (id: string) => {
   
   return { error }
 }
+
+// Organizations
+export const getOrganizations = async () => {
+  const { data, error } = await supabase
+    .from('organizations')
+    .select('*')
+    .order('created_at', { ascending: false })
+  
+  return { data, error }
+}
+
+export const createOrganization = async (org: {
+  name: string
+  description?: string
+  admin_email: string
+}) => {
+  const { data, error } = await supabase
+    .from('organizations')
+    .insert([org])
+    .select()
+  
+  return { data, error }
+}
+
+// User roles and permissions
+export const getUserRole = async (userId: string, orgId?: string) => {
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select(`
+      *,
+      role:roles(*),
+      organization:organizations(*)
+    `)
+    .eq('user_id', userId)
+    .eq('org_id', orgId || null)
+    .single()
+  
+  return { data, error }
+}
+
+export const getUserPermissions = async (userId: string, orgId?: string) => {
+  const { data, error } = await supabase
+    .from('user_permissions')
+    .select(`
+      *,
+      permission:permissions(*)
+    `)
+    .eq('user_id', userId)
+    .eq('org_id', orgId || null)
+  
+  return { data, error }
+}
+
+export const assignRole = async (assignment: {
+  user_id: string
+  role_id: string
+  org_id?: string
+  assigned_by: string
+}) => {
+  const { data, error } = await supabase
+    .from('user_roles')
+    .insert([assignment])
+    .select()
+  
+  return { data, error }
+}
+
+export const assignPermission = async (assignment: {
+  user_id: string
+  permission_id: string
+  org_id?: string
+  assigned_by: string
+}) => {
+  const { data, error } = await supabase
+    .from('user_permissions')
+    .insert([assignment])
+    .select()
+  
+  return { data, error }
+}
+
+export const getAllRoles = async () => {
+  const { data, error } = await supabase
+    .from('roles')
+    .select('*')
+    .order('level', { ascending: false })
+  
+  return { data, error }
+}
+
+export const getAllPermissions = async () => {
+  const { data, error } = await supabase
+    .from('permissions')
+    .select('*')
+    .order('category', { ascending: true })
+  
+  return { data, error }
+}
+
+export const getOrgUsers = async (orgId: string) => {
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select(`
+      *,
+      user:profiles(*),
+      role:roles(*)
+    `)
+    .eq('org_id', orgId)
+  
+  return { data, error }
+}
+
+// Check if user is super admin
+export const isSuperAdmin = async (userEmail: string) => {
+  return userEmail === 'testdatacrmpascal@gmail.com'
+}

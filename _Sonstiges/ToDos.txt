@@ -3,6 +3,8 @@ Settings hinzufügen (Sprache, Abmelden, ...)
 AI, wie funktioniert
 Karte, Möglichkeit einfach karte abbilden lassen und zum Beispiel Agent für umwandeln in automatisch erkennbare Adressen/ kostenlose API, die es auf der Karte darstellen kann
 Testdaten aus Dashboard entfernen
+Rollen hinzufügen (Ich der orgs hinzufügen kann mit jeweiligen admins; Admins von orgs, die neue nutzer der Org hinzufügen können und wichtige sachen wie alle daten löschen oder sowas machen können, auch rechte an andere vergeben, soll so sein dass jeder die rechte die er hat an andere weitergeben kann, Admin soll logischerweise alle rechte in der org haben) 
+Sinnvolle Liste mit rechten hinzufügen
 
 
 

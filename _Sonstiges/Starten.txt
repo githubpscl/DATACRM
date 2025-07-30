@@ -3,3 +3,11 @@ Backend starten: 	cd backend
 			node src/server.js
 
 Lokal: http://localhost:3000
+
+
+
+
+
+git add .
+git commit -m "Improvement/bugifx"
+git push

@@ -1,15 +1,18 @@
 'use client'
 
-import React, { ReactNode } from 'react'
+import React, { ReactNode, useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import UserDropdown from '@/components/ui/user-dropdown'
+import { useAuth } from '@/components/auth-provider'
+import { isSuperAdmin, getUserRole } from '@/lib/supabase'
 import { 
   Upload,
   Users,
   PenTool,
   GitBranch,
   Megaphone,
-  Settings
+  Settings,
+  Shield
 } from 'lucide-react'
 
 interface SubNavItem {
@@ -82,6 +85,16 @@ const navigation: NavigationItem[] = [
     ]
   },
   {
+    name: 'Administration',
+    href: '/dashboard/admin',
+    icon: Shield,
+    subItems: [
+      { name: 'Organisationen verwalten', href: '/dashboard/admin/organizations' },
+      { name: 'Benutzerberechtigungen', href: '/dashboard/admin/permissions' },
+      { name: 'System-Einstellungen', href: '/dashboard/admin/settings' }
+    ]
+  },
+  {
     name: 'Einstellungen',
     href: '/dashboard/settings',
     icon: Settings,
@@ -103,6 +116,45 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const { user } = useAuth()
+  const [userRole, setUserRole] = useState<string | null>(null)
+  const [isSuper, setIsSuper] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  // Check user permissions
+  useEffect(() => {
+    const checkPermissions = async () => {
+      if (!user?.email) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        const isSuperAdminUser = await isSuperAdmin(user.email)
+        setIsSuper(isSuperAdminUser)
+
+        const roleResponse = await getUserRole(user.id)
+        if (roleResponse.data) {
+          setUserRole(roleResponse.data.role)
+        }
+      } catch (error) {
+        console.error('Error checking permissions:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkPermissions()
+  }, [user])
+
+  // Filter navigation based on permissions
+  const filteredNavigation = navigation.filter(item => {
+    if (item.name === 'Administration') {
+      // Only show admin section to super admins and organization admins
+      return isSuper || userRole === 'organization_admin'
+    }
+    return true
+  })
 
   // Debug logging
   console.log('Current pathname:', pathname)
@@ -111,7 +163,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const normalizedPathname = pathname.endsWith('/') && pathname !== '/' ? pathname.slice(0, -1) : pathname
 
   // Find active main navigation item
-  const activeNavItem = navigation.find(item => 
+  const activeNavItem = filteredNavigation.find(item => 
     normalizedPathname === item.href || normalizedPathname.startsWith(item.href + '/')
   )
 
@@ -148,7 +200,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
               {/* Main Navigation Items */}
               <nav className="flex space-x-8 flex-1">
-                {navigation.map((item) => {
+                {filteredNavigation.map((item) => {
                   const isActive = normalizedPathname === item.href || normalizedPathname.startsWith(item.href + '/')
                   const Icon = item.icon
 
