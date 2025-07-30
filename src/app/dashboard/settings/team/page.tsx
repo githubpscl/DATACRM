@@ -28,13 +28,6 @@ import {
   Loader2
 } from 'lucide-react'
 
-interface User {
-  id: string
-  email: string
-  created_at: string
-  last_sign_in_at?: string
-}
-
 interface UserRole {
   id: string
   user_id: string

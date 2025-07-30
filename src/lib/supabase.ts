@@ -319,7 +319,9 @@ export const getUserRoles = async () => {
         email: `user-${role.user_id.slice(0, 8)}@example.com`
       },
       organization: {
-        name: (role.organizations as any)?.name || 'Unknown Organization'
+        name: Array.isArray(role.organizations) 
+          ? (role.organizations[0] as { name: string })?.name || 'Unknown Organization'
+          : (role.organizations as { name: string })?.name || 'Unknown Organization'
       }
     })) || []
     
