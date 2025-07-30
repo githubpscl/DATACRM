@@ -17,7 +17,6 @@ import {
   User,
   Eye,
   Edit,
-  Trash2,
   Send
 } from 'lucide-react'
 
