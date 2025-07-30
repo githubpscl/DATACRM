@@ -11,8 +11,7 @@ import {
   PenTool,
   GitBranch,
   Megaphone,
-  LogOut,
-  BarChart3
+  LogOut
 } from 'lucide-react'
 
 interface SubNavItem {
