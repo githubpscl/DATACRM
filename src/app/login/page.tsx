@@ -156,8 +156,40 @@ export default function AuthPage() {
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Sign In
                   </Button>
-                  <div className="text-center text-sm text-gray-500">
-                    Demo: admin@demo.com / password123
+                  
+                  {/* Demo Login Options */}
+                  <div className="space-y-2">
+                    <div className="text-center text-sm text-gray-500 mb-2">
+                      Oder verwenden Sie Demo-Zugänge:
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setLoginData({ email: 'demo@example.com', password: 'demo123' })
+                        }}
+                        disabled={loading}
+                      >
+                        Demo User
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setLoginData({ email: 'testdatacrmpascal@gmail.com', password: 'super123' })
+                        }}
+                        disabled={loading}
+                      >
+                        Super Admin
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="text-center text-xs text-gray-400">
+                    Manuelle Eingabe: demo@example.com / beliebiges Passwort
                   </div>
                 </form>
               </TabsContent>

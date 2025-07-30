@@ -116,9 +116,16 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const [userRole, setUserRole] = useState<string | null>(null)
   const [isSuper, setIsSuper] = useState(false)
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login')
+    }
+  }, [user, loading, router])
 
   // Check user permissions
   useEffect(() => {
@@ -142,6 +149,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
     checkPermissions()
   }, [user])
+
+  // Show loading while authentication is being checked
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Anmeldung wird überprüft...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show nothing while redirecting to login
+  if (!user) {
+    return null
+  }
 
   // Filter navigation based on permissions
   const filteredNavigation = navigation.filter(item => {

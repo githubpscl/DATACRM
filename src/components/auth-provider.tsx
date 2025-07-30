@@ -127,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true)
       
-      // For demo purposes, allow demo@example.com with any password
+      // For demo purposes, allow demo@example.com and super admin with any password
       if (email === 'demo@example.com') {
         const mockUser: User = {
           id: 'demo-user-id',
@@ -143,6 +143,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         setUser(mockUser)
         setToken('demo-token')
+        router.push('/dashboard')
+        return
+      }
+
+      // Super Admin Demo Login
+      if (email === 'testdatacrmpascal@gmail.com') {
+        const mockUser: User = {
+          id: 'super-admin-id',
+          email: 'testdatacrmpascal@gmail.com',
+          firstName: 'Super',
+          lastName: 'Admin',
+          role: 'super_admin',
+          companyId: 'system',
+          company: {
+            id: 'system',
+            name: 'System Administration'
+          }
+        }
+        setUser(mockUser)
+        setToken('super-admin-token')
         router.push('/dashboard')
         return
       }

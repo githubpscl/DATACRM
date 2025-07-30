@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { useAuth } from '@/components/auth-provider'
 import { 
   Users, 
   Mail, 
@@ -13,7 +14,9 @@ import {
   Plus,
   ArrowRight,
   Bot,
-  Activity
+  Activity,
+  Shield,
+  AlertCircle
 } from 'lucide-react'
 
 const stats = {
@@ -77,8 +80,56 @@ const quickActions = [
 ]
 
 export default function DashboardOverview() {
+  const { user } = useAuth()
+  
+  // Check if user is super admin
+  const isSuperAdmin = user?.email === 'testdatacrmpascal@gmail.com'
+  
   return (
     <div className="space-y-6">
+      {/* Welcome Message */}
+      <div className="mb-6">
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Shield className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">
+                  Willkommen im DataCRM Dashboard, {user?.email}!
+                </CardTitle>
+                <CardDescription className="flex items-center gap-2 mt-2">
+                  <Badge variant={isSuperAdmin ? "destructive" : "secondary"}>
+                    {isSuperAdmin ? "Super Admin" : "Demo User"}
+                  </Badge>
+                  {isSuperAdmin && (
+                    <span className="text-sm text-muted-foreground">
+                      Vollzugriff auf alle Admin-Funktionen
+                    </span>
+                  )}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-blue-50 p-4 rounded-lg border">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-blue-900 mb-2">Nächste Schritte für die Volleinrichtung:</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• Führen Sie die SQL-Skripte in Supabase aus (database-setup.sql)</li>
+                    <li>• Testen Sie die Organisation-Erstellung im Admin-Bereich</li>
+                    <li>• Konfigurieren Sie Rollen und Berechtigungen</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
