@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
   Upload,
-  FileText,
   Database,
   Plus,
   CheckCircle,
