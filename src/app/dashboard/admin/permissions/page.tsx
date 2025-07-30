@@ -61,6 +61,7 @@ export default function UserPermissionsPage() {
   const [roles, setRoles] = useState<Role[]>([])
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [loading, setLoading] = useState(true)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showAddUser, setShowAddUser] = useState(false)
 
   useEffect(() => {
