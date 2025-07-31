@@ -28,7 +28,7 @@ export default function OrganizationGuard({ children }: OrganizationGuardProps) 
         console.log('OrganizationGuard: Checking organization for', user.email)
         const result = await getCurrentUserOrganization()
         
-        const hasOrg = result.data?.organization_id !== null
+        const hasOrg = result.data?.id !== null
         console.log('OrganizationGuard: Has organization:', hasOrg)
         
         if (!hasOrg) {

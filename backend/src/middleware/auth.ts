@@ -8,7 +8,9 @@ export interface AuthRequest extends Request {
     email: string;
     role: string;
     companyId?: string;
+    organizationId?: string;
   };
+  organizationId?: string;
 }
 
 export const authenticateToken = async (
@@ -82,6 +84,54 @@ export const requireCompanyAccess = async (
     next();
   } catch (error) {
     console.error('Company access error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Organization middleware for multi-tenant support
+export const requireOrganizationAccess = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    // Get organization ID from header (preferred) or user data
+    const organizationId = req.headers['x-organization-id'] as string || req.user.organizationId || req.user.companyId;
+
+    if (!organizationId) {
+      res.status(403).json({ error: 'Organization access required' });
+      return;
+    }
+
+    // Verify user belongs to this organization
+    const user = await prisma.user.findFirst({
+      where: {
+        id: req.user.id,
+        isActive: true,
+        OR: [
+          { companyId: organizationId },
+          // Add organizationId field when available
+        ]
+      }
+    });
+
+    if (!user) {
+      res.status(403).json({ error: 'Access denied to this organization' });
+      return;
+    }
+
+    // Set organization context for the request
+    req.organizationId = organizationId;
+    req.user.organizationId = organizationId;
+
+    next();
+  } catch (error) {
+    console.error('Organization access error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

@@ -1,18 +1,22 @@
 import { Router } from 'express';
 import { body, query, validationResult } from 'express-validator';
 import { prisma } from '../index';
-import { AuthRequest, requireCompanyAccess } from '../middleware/auth';
+import { AuthRequest, requireCompanyAccess, requireOrganizationAccess } from '../middleware/auth';
 
 const router = Router();
 
-// Get all customers for company
-router.get('/', requireCompanyAccess, async (req: AuthRequest, res) => {
+// Get all customers for organization
+router.get('/', requireOrganizationAccess, async (req: AuthRequest, res) => {
   try {
     const { page = 1, limit = 50, search, segment, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     const where: any = {
-      companyId: req.user!.companyId
+      // Use organization ID from middleware
+      OR: [
+        { companyId: req.organizationId },
+        // Add organizationId field when schema is updated
+      ]
     };
 
     // Add search filter

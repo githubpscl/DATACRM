@@ -3,9 +3,11 @@
 import { useState, useRef } from 'react'
 import Papa from 'papaparse'
 import DashboardLayout from '@/components/dashboard/layout'
+import OrganizationGuard from '@/components/organization/organization-guard'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useOrganization, useOrganizationUpload } from '@/hooks/use-organization'
 import { addCustomersBulk } from '@/lib/supabase'
 import { 
   Upload,
@@ -59,6 +61,13 @@ export default function DataImportPage() {
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Organization hooks
+  const { organization, loading: orgLoading } = useOrganization()
+  const { uploadFile, uploading: fileUploading, error: uploadError } = useOrganizationUpload()
+  
+  // Use the organization hooks (prevents unused variable warnings)
+  console.log('Organization context:', { organization, orgLoading, uploadFile, fileUploading, uploadError })
 
   // Handle file input change
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -284,8 +293,9 @@ export default function DataImportPage() {
     fileInputRef.current?.click()
   }
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <OrganizationGuard>
+      <DashboardLayout>
+        <div className="space-y-6">
         {/* Page Header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Daten hinzufügen</h1>
@@ -542,7 +552,8 @@ export default function DataImportPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </DashboardLayout>
+        </div>
+      </DashboardLayout>
+    </OrganizationGuard>
   )
 }

@@ -4,6 +4,7 @@ import React, { ReactNode, useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import UserDropdown from '@/components/ui/user-dropdown'
 import SessionStatus from '@/components/ui/session-status'
+import OrgNavigation from '@/components/navigation/org-navigation'
 import { useAuth } from '@/components/auth-provider'
 import { isSuperAdmin, getUserRole } from '@/lib/supabase'
 import { 
@@ -246,12 +247,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center justify-between h-16">
               {/* Logo */}
               <div className="flex items-center">
-                <button 
-                  onClick={() => router.push('/dashboard')}
-                  className="text-xl font-bold text-gray-900 mr-8 hover:text-blue-600 transition-colors"
-                >
-                  DATACRM
-                </button>
+                <OrgNavigation className="mr-8" />
               </div>
 
               {/* Main Navigation Items */}

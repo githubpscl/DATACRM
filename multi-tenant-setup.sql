@@ -1,6 +1,7 @@
 -- ===============================================
 -- MULTI-TENANT ORGANIZATION SYSTEM
 -- Session-basierte Organisation mit RLS
+-- Vollständige Multi-Tenant Datenabsicherung
 -- ===============================================
 
 -- 1. Organization Context Function
@@ -22,6 +23,56 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 2. RLS Policies für alle relevanten Tabellen aktivieren
 
+-- Enable RLS on all tables
+ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customer_contacts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customer_activities ENABLE ROW LEVEL SECURITY;
+
+-- Check if these tables exist and enable RLS
+DO $$ 
+BEGIN
+    -- Enable RLS for additional tables if they exist
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'campaigns') THEN
+        ALTER TABLE campaigns ENABLE ROW LEVEL SECURITY;
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'journeys') THEN
+        ALTER TABLE journeys ENABLE ROW LEVEL SECURITY;
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'segments') THEN
+        ALTER TABLE segments ENABLE ROW LEVEL SECURITY;
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'templates') THEN
+        ALTER TABLE templates ENABLE ROW LEVEL SECURITY;
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'data_imports') THEN
+        ALTER TABLE data_imports ENABLE ROW LEVEL SECURITY;
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'campaign_deliveries') THEN
+        ALTER TABLE campaign_deliveries ENABLE ROW LEVEL SECURITY;
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'customer_segments') THEN
+        ALTER TABLE customer_segments ENABLE ROW LEVEL SECURITY;
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'journey_steps') THEN
+        ALTER TABLE journey_steps ENABLE ROW LEVEL SECURITY;
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'api_keys') THEN
+        ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'audit_logs') THEN
+        ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+    END IF;
+END $$;
+
 -- Customers: Nur Kunden der eigenen Organisation sichtbar
 DROP POLICY IF EXISTS "Users can only see customers in their organization" ON customers;
 CREATE POLICY "Users can only see customers in their organization" ON customers
@@ -37,51 +88,217 @@ DROP POLICY IF EXISTS "Users can only see activities in their organization" ON c
 CREATE POLICY "Users can only see activities in their organization" ON customer_activities
     FOR ALL USING (organization_id = get_current_user_organization_id());
 
+-- Additional RLS Policies for other tables
+DO $$ 
+BEGIN
+    -- Campaigns
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'campaigns') THEN
+        DROP POLICY IF EXISTS "Users can only see campaigns in their organization" ON campaigns;
+        CREATE POLICY "Users can only see campaigns in their organization" ON campaigns
+            FOR ALL USING (organization_id = get_current_user_organization_id() OR company_id = get_current_user_organization_id());
+    END IF;
+    
+    -- Journeys
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'journeys') THEN
+        DROP POLICY IF EXISTS "Users can only see journeys in their organization" ON journeys;
+        CREATE POLICY "Users can only see journeys in their organization" ON journeys
+            FOR ALL USING (organization_id = get_current_user_organization_id() OR company_id = get_current_user_organization_id());
+    END IF;
+    
+    -- Segments
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'segments') THEN
+        DROP POLICY IF EXISTS "Users can only see segments in their organization" ON segments;
+        CREATE POLICY "Users can only see segments in their organization" ON segments
+            FOR ALL USING (organization_id = get_current_user_organization_id() OR company_id = get_current_user_organization_id());
+    END IF;
+    
+    -- Templates
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'templates') THEN
+        DROP POLICY IF EXISTS "Users can only see templates in their organization" ON templates;
+        CREATE POLICY "Users can only see templates in their organization" ON templates
+            FOR ALL USING (organization_id = get_current_user_organization_id() OR company_id = get_current_user_organization_id());
+    END IF;
+    
+    -- Data Imports
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'data_imports') THEN
+        DROP POLICY IF EXISTS "Users can only see data_imports in their organization" ON data_imports;
+        CREATE POLICY "Users can only see data_imports in their organization" ON data_imports
+            FOR ALL USING (organization_id = get_current_user_organization_id() OR company_id = get_current_user_organization_id());
+    END IF;
+    
+    -- Campaign Deliveries (indirectly via campaign organization)
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'campaign_deliveries') THEN
+        DROP POLICY IF EXISTS "Users can only see campaign_deliveries in their organization" ON campaign_deliveries;
+        CREATE POLICY "Users can only see campaign_deliveries in their organization" ON campaign_deliveries
+            FOR ALL USING (
+                EXISTS (
+                    SELECT 1 FROM campaigns c 
+                    WHERE c.id = campaign_id 
+                    AND (c.organization_id = get_current_user_organization_id() OR c.company_id = get_current_user_organization_id())
+                )
+                OR
+                EXISTS (
+                    SELECT 1 FROM customers cu 
+                    WHERE cu.id = customer_id 
+                    AND cu.organization_id = get_current_user_organization_id()
+                )
+            );
+    END IF;
+    
+    -- Customer Segments (indirectly via customer organization)
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'customer_segments') THEN
+        DROP POLICY IF EXISTS "Users can only see customer_segments in their organization" ON customer_segments;
+        CREATE POLICY "Users can only see customer_segments in their organization" ON customer_segments
+            FOR ALL USING (
+                EXISTS (
+                    SELECT 1 FROM customers c 
+                    WHERE c.id = customer_id 
+                    AND c.organization_id = get_current_user_organization_id()
+                )
+            );
+    END IF;
+    
+    -- Journey Steps (indirectly via customer organization)
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'journey_steps') THEN
+        DROP POLICY IF EXISTS "Users can only see journey_steps in their organization" ON journey_steps;
+        CREATE POLICY "Users can only see journey_steps in their organization" ON journey_steps
+            FOR ALL USING (
+                EXISTS (
+                    SELECT 1 FROM customers c 
+                    WHERE c.id = customer_id 
+                    AND c.organization_id = get_current_user_organization_id()
+                )
+            );
+    END IF;
+    
+    -- API Keys
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'api_keys') THEN
+        DROP POLICY IF EXISTS "Users can only see api_keys in their organization" ON api_keys;
+        CREATE POLICY "Users can only see api_keys in their organization" ON api_keys
+            FOR ALL USING (organization_id = get_current_user_organization_id() OR company_id = get_current_user_organization_id());
+    END IF;
+    
+    -- Audit Logs
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'audit_logs') THEN
+        DROP POLICY IF EXISTS "Users can only see audit_logs in their organization" ON audit_logs;
+        CREATE POLICY "Users can only see audit_logs in their organization" ON audit_logs
+            FOR ALL USING (organization_id = get_current_user_organization_id() OR company_id = get_current_user_organization_id());
+    END IF;
+END $$;
+
 -- 3. Automatisches Setzen der Organization ID bei INSERT
--- Customers
-CREATE OR REPLACE FUNCTION set_organization_id_customers()
+-- Universal function for setting organization_id or company_id
+CREATE OR REPLACE FUNCTION set_current_organization_id()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.organization_id = get_current_user_organization_id();
+    -- Try to set organization_id first, then company_id as fallback
+    IF TG_TABLE_NAME = 'customers' OR TG_TABLE_NAME = 'customer_contacts' OR TG_TABLE_NAME = 'customer_activities' THEN
+        NEW.organization_id = get_current_user_organization_id();
+    ELSE
+        -- For tables that might use company_id (backward compatibility)
+        IF NEW.organization_id IS NULL AND NEW.company_id IS NULL THEN
+            IF column_exists(TG_TABLE_NAME, 'organization_id') THEN
+                NEW.organization_id = get_current_user_organization_id();
+            ELSIF column_exists(TG_TABLE_NAME, 'company_id') THEN
+                NEW.company_id = get_current_user_organization_id();
+            END IF;
+        END IF;
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS set_org_id_customers ON customers;
-CREATE TRIGGER set_org_id_customers
-    BEFORE INSERT ON customers
-    FOR EACH ROW
-    EXECUTE FUNCTION set_organization_id_customers();
-
--- Customer Contacts
-CREATE OR REPLACE FUNCTION set_organization_id_contacts()
-RETURNS TRIGGER AS $$
+-- Helper function to check if column exists
+CREATE OR REPLACE FUNCTION column_exists(table_name text, column_name text)
+RETURNS boolean AS $$
 BEGIN
-    NEW.organization_id = get_current_user_organization_id();
-    RETURN NEW;
+    RETURN EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = $1 AND column_name = $2
+    );
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS set_org_id_contacts ON customer_contacts;
-CREATE TRIGGER set_org_id_contacts
-    BEFORE INSERT ON customer_contacts
-    FOR EACH ROW
-    EXECUTE FUNCTION set_organization_id_contacts();
-
--- Customer Activities
-CREATE OR REPLACE FUNCTION set_organization_id_activities()
-RETURNS TRIGGER AS $$
+-- Apply triggers to all relevant tables
+DO $$ 
 BEGIN
-    NEW.organization_id = get_current_user_organization_id();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+    -- Core customer tables
+    DROP TRIGGER IF EXISTS set_org_id_customers ON customers;
+    CREATE TRIGGER set_org_id_customers
+        BEFORE INSERT ON customers
+        FOR EACH ROW
+        EXECUTE FUNCTION set_current_organization_id();
 
-DROP TRIGGER IF EXISTS set_org_id_activities ON customer_activities;
-CREATE TRIGGER set_org_id_activities
-    BEFORE INSERT ON customer_activities
-    FOR EACH ROW
-    EXECUTE FUNCTION set_organization_id_activities();
+    DROP TRIGGER IF EXISTS set_org_id_contacts ON customer_contacts;
+    CREATE TRIGGER set_org_id_contacts
+        BEFORE INSERT ON customer_contacts
+        FOR EACH ROW
+        EXECUTE FUNCTION set_current_organization_id();
+
+    DROP TRIGGER IF EXISTS set_org_id_activities ON customer_activities;
+    CREATE TRIGGER set_org_id_activities
+        BEFORE INSERT ON customer_activities
+        FOR EACH ROW
+        EXECUTE FUNCTION set_current_organization_id();
+
+    -- Additional tables (if they exist)
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'campaigns') THEN
+        DROP TRIGGER IF EXISTS set_org_id_campaigns ON campaigns;
+        CREATE TRIGGER set_org_id_campaigns
+            BEFORE INSERT ON campaigns
+            FOR EACH ROW
+            EXECUTE FUNCTION set_current_organization_id();
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'journeys') THEN
+        DROP TRIGGER IF EXISTS set_org_id_journeys ON journeys;
+        CREATE TRIGGER set_org_id_journeys
+            BEFORE INSERT ON journeys
+            FOR EACH ROW
+            EXECUTE FUNCTION set_current_organization_id();
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'segments') THEN
+        DROP TRIGGER IF EXISTS set_org_id_segments ON segments;
+        CREATE TRIGGER set_org_id_segments
+            BEFORE INSERT ON segments
+            FOR EACH ROW
+            EXECUTE FUNCTION set_current_organization_id();
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'templates') THEN
+        DROP TRIGGER IF EXISTS set_org_id_templates ON templates;
+        CREATE TRIGGER set_org_id_templates
+            BEFORE INSERT ON templates
+            FOR EACH ROW
+            EXECUTE FUNCTION set_current_organization_id();
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'data_imports') THEN
+        DROP TRIGGER IF EXISTS set_org_id_data_imports ON data_imports;
+        CREATE TRIGGER set_org_id_data_imports
+            BEFORE INSERT ON data_imports
+            FOR EACH ROW
+            EXECUTE FUNCTION set_current_organization_id();
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'api_keys') THEN
+        DROP TRIGGER IF EXISTS set_org_id_api_keys ON api_keys;
+        CREATE TRIGGER set_org_id_api_keys
+            BEFORE INSERT ON api_keys
+            FOR EACH ROW
+            EXECUTE FUNCTION set_current_organization_id();
+    END IF;
+    
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'audit_logs') THEN
+        DROP TRIGGER IF EXISTS set_org_id_audit_logs ON audit_logs;
+        CREATE TRIGGER set_org_id_audit_logs
+            BEFORE INSERT ON audit_logs
+            FOR EACH ROW
+            EXECUTE FUNCTION set_current_organization_id();
+    END IF;
+END $$;
 
 -- 4. Benutzer ohne Organisation - Spezielle Behandlung
 -- Funktion um zu prüfen ob Benutzer einer Organisation angehört
@@ -172,6 +389,52 @@ BEGIN
         AND status = 'pending'
     )
     ORDER BY o.name;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Funktion um aktuelle Organisation des Benutzers mit Details zu holen
+CREATE OR REPLACE FUNCTION get_current_user_organization()
+RETURNS TABLE (
+    id UUID,
+    name TEXT,
+    description TEXT,
+    industry TEXT,
+    website TEXT,
+    logo_url TEXT,
+    subscription_plan TEXT,
+    is_active BOOLEAN
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        o.id,
+        o.name,
+        o.description,
+        o.industry,
+        o.website,
+        o.logo_url,
+        o.subscription_plan,
+        o.is_active
+    FROM organizations o
+    INNER JOIN users u ON u.organization_id = o.id
+    WHERE u.id = auth.uid()
+    AND u.is_active = true
+    AND o.is_active = true;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Funktion um zu prüfen ob der aktuelle Benutzer Super-Admin ist
+CREATE OR REPLACE FUNCTION is_current_user_super_admin()
+RETURNS BOOLEAN AS $$
+DECLARE
+    user_role TEXT;
+BEGIN
+    SELECT role INTO user_role
+    FROM users 
+    WHERE id = auth.uid()
+    AND is_active = true;
+    
+    RETURN (user_role = 'super_admin');
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

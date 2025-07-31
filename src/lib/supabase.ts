@@ -18,6 +18,18 @@ const getRedirectUrl = () => {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// Types for organization data
+export interface Organization {
+  id: string
+  name: string
+  description?: string
+  industry?: string
+  website?: string
+  logo_url?: string
+  subscription_plan?: string
+  is_active: boolean
+}
+
 // Auth helpers
 export const signUp = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signUp({
@@ -48,8 +60,44 @@ export const getCurrentUser = async () => {
   return user
 }
 
-// Multi-Tenant Organization Functions
-export const getCurrentUserOrganization = async () => {
+// Organization helpers
+export const getCurrentUserOrganization = async (): Promise<{ data: Organization | null, error: unknown }> => {
+  try {
+    const { data, error } = await supabase.rpc('get_current_user_organization')
+    
+    if (error) {
+      console.error('Error getting current user organization:', error)
+      return { data: null, error }
+    }
+    
+    // Since RPC returns an array, get the first item
+    const organization = data && data.length > 0 ? data[0] : null
+    return { data: organization, error: null }
+  } catch (error) {
+    console.error('Error in getCurrentUserOrganization:', error)
+    return { data: null, error }
+  }
+}
+
+// Check if current user is super admin
+export const isCurrentUserSuperAdmin = async (): Promise<{ data: boolean, error: unknown }> => {
+  try {
+    const { data, error } = await supabase.rpc('is_current_user_super_admin')
+    
+    if (error) {
+      console.error('Error checking super admin status:', error)
+      return { data: false, error }
+    }
+    
+    return { data: data || false, error: null }
+  } catch (error) {
+    console.error('Error in isCurrentUserSuperAdmin:', error)
+    return { data: false, error }
+  }
+}
+
+// Multi-Tenant Organization Functions (legacy compatibility)
+export const getUserOrganizationData = async () => {
   const { data, error } = await supabase
     .from('users')
     .select(`
@@ -64,7 +112,7 @@ export const getCurrentUserOrganization = async () => {
 }
 
 export const userHasOrganization = async () => {
-  const result = await getCurrentUserOrganization()
+  const result = await getUserOrganizationData()
   return result.data?.organization_id !== null
 }
 
@@ -223,7 +271,7 @@ export const getUserProfile = async (userId: string) => {
 // Database helpers - Customers
 export const getCustomers = async () => {
   const userOrg = await getCurrentUserOrganization()
-  if (!userOrg || !userOrg.data?.organization_id) return { data: [], error: 'No organization found' }
+  if (!userOrg || !userOrg.data?.id) return { data: [], error: 'No organization found' }
 
   const { data, error } = await supabase
     .from('customers')
@@ -232,7 +280,7 @@ export const getCustomers = async () => {
       contacts:customer_contacts (*),
       activities:customer_activities (*)
     `)
-    .eq('organization_id', userOrg.data.organization_id)
+    .eq('organization_id', userOrg.data.id)
     .order('created_at', { ascending: false })
   
   return { data, error }
@@ -253,13 +301,13 @@ export const addCustomer = async (customer: {
   notes?: string
 }) => {
   const userOrg = await getCurrentUserOrganization()
-  if (!userOrg?.data?.organization_id) return { data: null, error: 'No organization found' }
+  if (!userOrg?.data?.id) return { data: null, error: 'No organization found' }
 
   const { data, error } = await supabase
     .from('customers')
     .insert([{
       ...customer,
-      organization_id: userOrg.data.organization_id,
+      organization_id: userOrg.data.id,
       customer_status: customer.customer_status || 'lead',
       priority: customer.priority || 'normal',
       is_active: true,
@@ -282,11 +330,11 @@ export const addCustomersBulk = async (customers: {
   industry?: string
 }[]) => {
   const userOrg = await getCurrentUserOrganization()
-  if (!userOrg?.data?.organization_id) return { data: null, error: 'No organization found' }
+  if (!userOrg?.data?.id) return { data: null, error: 'No organization found' }
 
   const customersWithOrg = customers.map(customer => ({
     ...customer,
-    organization_id: userOrg.data!.organization_id,
+    organization_id: userOrg.data!.id,
     customer_status: 'lead' as const,
     priority: 'normal' as const,
     is_active: true,
@@ -335,13 +383,13 @@ export const addCustomerContact = async (contact: {
   is_primary?: boolean
 }) => {
   const userOrg = await getCurrentUserOrganization()
-  if (!userOrg?.data?.organization_id) return { data: null, error: 'No organization found' }
+  if (!userOrg?.data?.id) return { data: null, error: 'No organization found' }
 
   const { data, error } = await supabase
     .from('customer_contacts')
     .insert([{
       ...contact,
-      organization_id: userOrg.data.organization_id,
+      organization_id: userOrg.data.id,
       contact_type: contact.contact_type || 'primary',
       is_primary: contact.is_primary || false,
       is_active: true
@@ -367,7 +415,7 @@ export const addCustomerActivity = async (activity: {
   const user = await getCurrentUser()
   const userOrg = await getCurrentUserOrganization()
   
-  if (!user || !userOrg?.data?.organization_id) {
+  if (!user || !userOrg?.data?.id) {
     return { data: null, error: 'User or organization not found' }
   }
 
@@ -375,7 +423,7 @@ export const addCustomerActivity = async (activity: {
     .from('customer_activities')
     .insert([{
       ...activity,
-      organization_id: userOrg.data.organization_id,
+      organization_id: userOrg.data.id,
       user_id: user.id,
       status: activity.status || 'scheduled',
       priority: activity.priority || 'normal'
@@ -963,7 +1011,7 @@ export const updateUserProfile = async (userId: string, updates: { name?: string
 export const getAnalyticsData = async () => {
   try {
     const userOrganization = await getCurrentUserOrganization()
-    if (!userOrganization || !userOrganization.data?.organization_id) {
+    if (!userOrganization || !userOrganization.data?.id) {
       return { data: null, error: 'No organization found' }
     }
 
@@ -971,7 +1019,7 @@ export const getAnalyticsData = async () => {
     const { data: customers, error: customersError } = await supabase
       .from('customers')
       .select('*')
-      .eq('organization_id', userOrganization.data.organization_id)
+      .eq('organization_id', userOrganization.data.id)
 
     if (customersError) {
       console.error('Error loading customers for analytics:', customersError)

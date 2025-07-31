@@ -62,7 +62,7 @@ export default function OrganizationRequiredPage() {
       try {
         // Prüfen ob Benutzer bereits einer Organisation angehört
         const userOrg = await getCurrentUserOrganization()
-        if (userOrg.data?.organization_id) {
+        if (userOrg.data?.id) {
           // Benutzer hat bereits eine Organisation, weiterleiten
           router.push('/dashboard')
           return
