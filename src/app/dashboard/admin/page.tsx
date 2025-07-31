@@ -34,13 +34,19 @@ export default function SuperAdminDashboard() {
     const checkAccess = async () => {
       try {
         const user = await getCurrentUser()
+        console.log('Current user:', user)
+        
         if (!user?.email) {
+          console.log('No user email found')
           setIsAuthorized(false)
           setLoading(false)
           return
         }
 
+        console.log('Checking super admin status for:', user.email)
         const isSuper = await isSuperAdmin(user.email)
+        console.log('isSuperAdmin result:', isSuper)
+        
         setIsAuthorized(isSuper)
         
         if (isSuper) {
@@ -92,11 +98,25 @@ export default function SuperAdminDashboard() {
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Zugriff verweigert</h3>
-            <p className="text-gray-500">
+            <p className="text-gray-500 mb-4">
               Sie haben keine Berechtigung für diese Seite.
               <br />
               Nur Super-Administratoren können auf diese Funktion zugreifen.
             </p>
+            <div className="bg-gray-100 p-4 rounded-lg text-left max-w-md mx-auto">
+              <h4 className="font-medium text-gray-900 mb-2">Debug-Informationen:</h4>
+              <p className="text-sm text-gray-600 mb-1">
+                <strong>Angemeldete E-Mail:</strong> {/* wird durch getCurrentUser() ermittelt */}
+              </p>
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>Hardcoded Super Admin:</strong> testdatacrmpascal@gmail.com
+              </p>
+              <p className="text-xs text-gray-500">
+                Öffnen Sie die Browser-Konsole (F12) für detaillierte Logs.
+                <br />
+                Verwenden Sie das SQL-Script "create-super-admin-user.sql" um sich als Super Admin zu setzen.
+              </p>
+            </div>
           </div>
         </div>
       </DashboardLayout>

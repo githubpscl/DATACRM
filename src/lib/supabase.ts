@@ -560,7 +560,35 @@ export const getOrgUsers = async (orgId: string) => {
 
 // Check if user is super admin
 export const isSuperAdmin = async (userEmail: string) => {
-  return userEmail === 'testdatacrmpascal@gmail.com'
+  console.log('Checking super admin status for:', userEmail)
+  
+  // Hardcoded super admin email
+  if (userEmail === 'testdatacrmpascal@gmail.com') {
+    console.log('User is hardcoded super admin')
+    return true
+  }
+  
+  // Check database for super_admin role
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('role')
+      .eq('email', userEmail)
+      .eq('role', 'super_admin')
+      .single()
+    
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking super admin status:', error)
+      return false
+    }
+    
+    const isSuper = !!data
+    console.log('Database super admin check result:', isSuper)
+    return isSuper
+  } catch (err) {
+    console.error('Unexpected error in isSuperAdmin:', err)
+    return false
+  }
 }
 
 // Check if user is organization admin
