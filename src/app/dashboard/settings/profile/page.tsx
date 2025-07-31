@@ -28,7 +28,7 @@ export default function ProfilePage() {
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
     email: user?.email || '',
-    company: user?.company?.name || '',
+    company: user?.organization?.name || '',
     phone: '',
     position: '',
     timezone: 'Europe/Berlin',

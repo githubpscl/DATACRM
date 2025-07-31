@@ -82,7 +82,7 @@ export default function AuthPage() {
         password: registerData.password,
         firstName: registerData.firstName,
         lastName: registerData.lastName,
-        companyName: registerData.companyName
+        organizationName: registerData.companyName
       })
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Registrierung fehlgeschlagen'

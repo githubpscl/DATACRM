@@ -188,11 +188,15 @@ export default function DataImportPage() {
                   // Skip rows without email
                   if (!email) return null
                   
+                  // Determine customer type based on whether company is provided
+                  const customer_type: 'company' | 'person' = company?.trim() ? 'company' : 'person'
+                  
                   return {
+                    customer_type,
                     email: email.trim(),
                     first_name: firstName?.trim() || undefined,
                     last_name: lastName?.trim() || undefined,
-                    company: company?.trim() || undefined,
+                    company_name: company?.trim() || undefined,
                     phone: phone?.trim() || undefined
                   }
                 }).filter(customer => customer !== null)
@@ -208,7 +212,8 @@ export default function DataImportPage() {
                   
                   if (error) {
                     console.error('Database error:', error)
-                    alert(`Fehler beim Speichern der Daten aus ${file.name}: ${error.message}`)
+                    const errorMessage = typeof error === 'string' ? error : error.message || 'Unbekannter Fehler'
+                    alert(`Fehler beim Speichern der Daten aus ${file.name}: ${errorMessage}`)
                     setUploadProgress(prev => ({ ...prev, [file.name]: 0 }))
                     reject(error)
                     return

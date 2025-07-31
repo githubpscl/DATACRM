@@ -48,41 +48,149 @@ export const getCurrentUser = async () => {
   return user
 }
 
-// Database helpers
-export const getCustomers = async () => {
+// Database helpers - Organizations
+export const getCurrentUserOrganization = async () => {
+  const user = await getCurrentUser()
+  if (!user) return null
+
   const { data, error } = await supabase
-    .from('customers')
+    .from('users')
+    .select(`
+      *,
+      organization:organizations (*)
+    `)
+    .eq('id', user.id)
+    .single()
+  
+  return { data, error }
+}
+
+export const getOrganizations = async () => {
+  const { data, error } = await supabase
+    .from('organizations')
     .select('*')
     .order('created_at', { ascending: false })
   
   return { data, error }
 }
 
-export const addCustomer = async (customer: {
+// Database helpers - Users
+export const createUserProfile = async (userData: {
+  id: string
   email: string
   first_name?: string
   last_name?: string
-  company?: string
-  phone?: string
+  organization_id?: string
+  role?: string
 }) => {
   const { data, error } = await supabase
+    .from('users')
+    .insert([{
+      id: userData.id,
+      email: userData.email,
+      first_name: userData.first_name,
+      last_name: userData.last_name,
+      organization_id: userData.organization_id,
+      role: userData.role || 'user',
+      is_active: true,
+      is_verified: false
+    }])
+    .select()
+  
+  return { data, error }
+}
+
+export const getUserProfile = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('users')
+    .select(`
+      *,
+      organization:organizations (*)
+    `)
+    .eq('id', userId)
+    .single()
+  
+  return { data, error }
+}
+
+// Database helpers - Customers
+export const getCustomers = async () => {
+  const userOrg = await getCurrentUserOrganization()
+  if (!userOrg || !userOrg.data?.organization_id) return { data: [], error: 'No organization found' }
+
+  const { data, error } = await supabase
     .from('customers')
-    .insert([customer])
+    .select(`
+      *,
+      contacts:customer_contacts (*),
+      activities:customer_activities (*)
+    `)
+    .eq('organization_id', userOrg.data.organization_id)
+    .order('created_at', { ascending: false })
+  
+  return { data, error }
+}
+
+export const addCustomer = async (customer: {
+  customer_type: 'person' | 'company'
+  email: string
+  first_name?: string
+  last_name?: string
+  company_name?: string
+  phone?: string
+  salutation?: string
+  industry?: string
+  customer_status?: 'lead' | 'prospect' | 'customer' | 'inactive'
+  tags?: string[]
+  priority?: 'low' | 'normal' | 'high' | 'critical'
+  notes?: string
+}) => {
+  const userOrg = await getCurrentUserOrganization()
+  if (!userOrg?.data?.organization_id) return { data: null, error: 'No organization found' }
+
+  const { data, error } = await supabase
+    .from('customers')
+    .insert([{
+      ...customer,
+      organization_id: userOrg.data.organization_id,
+      customer_status: customer.customer_status || 'lead',
+      priority: customer.priority || 'normal',
+      is_active: true,
+      is_verified: false,
+      language: 'de',
+      currency: 'EUR'
+    }])
     .select()
   
   return { data, error }
 }
 
 export const addCustomersBulk = async (customers: {
+  customer_type: 'person' | 'company'
   email: string
   first_name?: string
   last_name?: string
-  company?: string
+  company_name?: string
   phone?: string
+  industry?: string
 }[]) => {
+  const userOrg = await getCurrentUserOrganization()
+  if (!userOrg?.data?.organization_id) return { data: null, error: 'No organization found' }
+
+  const customersWithOrg = customers.map(customer => ({
+    ...customer,
+    organization_id: userOrg.data.organization_id,
+    customer_status: 'lead' as const,
+    priority: 'normal' as const,
+    is_active: true,
+    is_verified: false,
+    language: 'de',
+    currency: 'EUR'
+  }))
+
   const { data, error } = await supabase
     .from('customers')
-    .insert(customers)
+    .insert(customersWithOrg)
     .select()
   
   return { data, error }
@@ -107,16 +215,70 @@ export const deleteCustomer = async (id: string) => {
   return { error }
 }
 
-// Organizations
-export const getOrganizations = async () => {
+// Customer Contacts
+export const addCustomerContact = async (contact: {
+  customer_id: string
+  first_name: string
+  last_name: string
+  email?: string
+  phone?: string
+  job_title?: string
+  department?: string
+  contact_type?: 'primary' | 'billing' | 'technical' | 'decision_maker'
+  is_primary?: boolean
+}) => {
+  const userOrg = await getCurrentUserOrganization()
+  if (!userOrg?.data?.organization_id) return { data: null, error: 'No organization found' }
+
   const { data, error } = await supabase
-    .from('organizations')
-    .select('*')
-    .order('created_at', { ascending: false })
+    .from('customer_contacts')
+    .insert([{
+      ...contact,
+      organization_id: userOrg.data.organization_id,
+      contact_type: contact.contact_type || 'primary',
+      is_primary: contact.is_primary || false,
+      is_active: true
+    }])
+    .select()
   
   return { data, error }
 }
 
+// Customer Activities
+export const addCustomerActivity = async (activity: {
+  customer_id: string
+  activity_type: string
+  title: string
+  description?: string
+  outcome?: string
+  scheduled_at?: string
+  duration_minutes?: number
+  status?: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
+  priority?: 'low' | 'normal' | 'high' | 'urgent'
+  metadata?: Record<string, any>
+}) => {
+  const user = await getCurrentUser()
+  const userOrg = await getCurrentUserOrganization()
+  
+  if (!user || !userOrg?.data?.organization_id) {
+    return { data: null, error: 'User or organization not found' }
+  }
+
+  const { data, error } = await supabase
+    .from('customer_activities')
+    .insert([{
+      ...activity,
+      organization_id: userOrg.data.organization_id,
+      user_id: user.id,
+      status: activity.status || 'scheduled',
+      priority: activity.priority || 'normal'
+    }])
+    .select()
+  
+  return { data, error }
+}
+
+// Organizations - Updated functions
 export const createOrganization = async (org: {
   name: string
   description?: string
@@ -518,6 +680,86 @@ export const updateUserProfile = async (userId: string, updates: { name?: string
     return { data, error: null }
   } catch (error) {
     console.error('Error in updateUserProfile:', error)
+    return { data: null, error }
+  }
+}
+
+// Analytics functions
+export const getAnalyticsData = async () => {
+  try {
+    const userOrganization = await getCurrentUserOrganization()
+    if (!userOrganization || !userOrganization.data?.organization_id) {
+      return { data: null, error: 'No organization found' }
+    }
+
+    // Get all customers for the organization
+    const { data: customers, error: customersError } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('organization_id', userOrganization.data.organization_id)
+
+    if (customersError) {
+      console.error('Error loading customers for analytics:', customersError)
+      return { data: null, error: customersError }
+    }
+
+    const totalCustomers = customers?.length || 0
+    const activeCustomers = customers?.filter(c => c.customer_status === 'customer').length || 0
+    const leadsCount = customers?.filter(c => c.customer_status === 'lead').length || 0
+    const prospectsCount = customers?.filter(c => c.customer_status === 'prospect').length || 0
+
+    // Calculate customers created this month
+    const startOfMonth = new Date()
+    startOfMonth.setDate(1)
+    startOfMonth.setHours(0, 0, 0, 0)
+    
+    const newCustomersThisMonth = customers?.filter(c => 
+      new Date(c.created_at) >= startOfMonth
+    ).length || 0
+
+    // Calculate growth rate (simplified)
+    const customerGrowthRate = totalCustomers > 0 ? (newCustomersThisMonth / totalCustomers) * 100 : 0
+
+    // Group by status
+    const customersByStatus = customers?.reduce((acc, customer) => {
+      acc[customer.customer_status] = (acc[customer.customer_status] || 0) + 1
+      return acc
+    }, {} as { [key: string]: number }) || {}
+
+    // Group by type
+    const customersByType = customers?.reduce((acc, customer) => {
+      acc[customer.customer_type] = (acc[customer.customer_type] || 0) + 1
+      return acc
+    }, { person: 0, company: 0 }) || { person: 0, company: 0 }
+
+    // Top industries
+    const industryCount = customers?.reduce((acc, customer) => {
+      if (customer.industry) {
+        acc[customer.industry] = (acc[customer.industry] || 0) + 1
+      }
+      return acc
+    }, {} as { [key: string]: number }) || {}
+
+    const topIndustries = Object.entries(industryCount)
+      .map(([industry, count]) => ({ industry, count: count as number }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+
+    const analyticsData = {
+      totalCustomers,
+      activeCustomers,
+      newCustomersThisMonth,
+      leadsCount,
+      prospectsCount,
+      customerGrowthRate: Math.round(customerGrowthRate * 10) / 10,
+      customersByStatus,
+      customersByType,
+      topIndustries
+    }
+
+    return { data: analyticsData, error: null }
+  } catch (error) {
+    console.error('Error in getAnalyticsData:', error)
     return { data: null, error }
   }
 }

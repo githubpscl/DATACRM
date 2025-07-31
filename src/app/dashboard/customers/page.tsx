@@ -6,7 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import { getCustomers } from '@/lib/supabase'
+import { Customer } from '@/types/database'
+import CustomerForm from '@/components/customers/customer-form'
 import { 
   Search, 
   Plus, 
@@ -14,19 +17,12 @@ import {
   Mail, 
   Phone, 
   User,
+  Building2,
   Edit,
-  MoreVertical
+  MoreVertical,
+  Star,
+  Clock
 } from 'lucide-react'
-
-interface Customer {
-  id: string
-  email: string
-  first_name?: string
-  last_name?: string
-  company?: string
-  phone?: string
-  created_at?: string
-}
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -34,6 +30,7 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([])
+  const [showCustomerForm, setShowCustomerForm] = useState(false)
 
   useEffect(() => {
     loadCustomers()
@@ -71,12 +68,14 @@ export default function CustomersPage() {
         const firstName = customer.first_name || ''
         const lastName = customer.last_name || ''
         const email = customer.email || ''
-        const company = customer.company || ''
+        const companyName = customer.company_name || ''
+        const customerNumber = customer.customer_number || ''
         
         return firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               company.toLowerCase().includes(searchTerm.toLowerCase())
+               companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               customerNumber.toLowerCase().includes(searchTerm.toLowerCase())
       })
     }
 
@@ -100,6 +99,10 @@ export default function CustomersPage() {
   }
 
   const getInitials = (customer: Customer) => {
+    if (customer.customer_type === 'company' && customer.company_name) {
+      return customer.company_name.slice(0, 2).toUpperCase()
+    }
+    
     const firstName = customer.first_name || ''
     const lastName = customer.last_name || ''
     
@@ -114,6 +117,10 @@ export default function CustomersPage() {
   }
 
   const getDisplayName = (customer: Customer) => {
+    if (customer.customer_type === 'company' && customer.company_name) {
+      return customer.company_name
+    }
+    
     const firstName = customer.first_name || ''
     const lastName = customer.last_name || ''
     
@@ -124,7 +131,34 @@ export default function CustomersPage() {
     } else if (lastName) {
       return lastName
     }
-    return customer.email.split('@')[0]
+    return customer.email?.split('@')[0] || 'Unbekannt'
+  }
+
+  const getCustomerSubtitle = (customer: Customer) => {
+    if (customer.customer_type === 'company') {
+      return customer.industry || 'Unternehmen'
+    }
+    return customer.salutation || 'Person'
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'customer': return 'bg-green-100 text-green-800'
+      case 'prospect': return 'bg-blue-100 text-blue-800'
+      case 'lead': return 'bg-yellow-100 text-yellow-800'
+      case 'inactive': return 'bg-gray-100 text-gray-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'critical': return 'text-red-600'
+      case 'high': return 'text-orange-600'
+      case 'normal': return 'text-blue-600'
+      case 'low': return 'text-gray-600'
+      default: return 'text-gray-600'
+    }
   }
 
   if (loading) {
@@ -156,7 +190,7 @@ export default function CustomersPage() {
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <Button>
+            <Button onClick={() => setShowCustomerForm(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Neuer Kunde
             </Button>
@@ -201,7 +235,7 @@ export default function CustomersPage() {
                     : 'Keine Kunden entsprechen Ihren Suchkriterien.'
                   }
                 </p>
-                <Button>
+                <Button onClick={() => setShowCustomerForm(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Ersten Kunden erstellen
                 </Button>
@@ -220,9 +254,11 @@ export default function CustomersPage() {
                         />
                       </th>
                       <th className="text-left py-3 px-4">Kunde</th>
-                      <th className="text-left py-3 px-4">Unternehmen</th>
+                      <th className="text-left py-3 px-4">Typ</th>
+                      <th className="text-left py-3 px-4">Status</th>
+                      <th className="text-left py-3 px-4">Priorität</th>
                       <th className="text-left py-3 px-4">Telefon</th>
-                      <th className="text-left py-3 px-4">Erstellt am</th>
+                      <th className="text-left py-3 px-4">Letzte Aktivität</th>
                       <th className="text-left py-3 px-4">Aktionen</th>
                     </tr>
                   </thead>
@@ -245,26 +281,54 @@ export default function CustomersPage() {
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <div className="font-medium text-gray-900">
+                              <div className="font-medium text-gray-900 flex items-center">
+                                {customer.customer_type === 'company' ? (
+                                  <Building2 className="h-4 w-4 mr-1 text-gray-500" />
+                                ) : (
+                                  <User className="h-4 w-4 mr-1 text-gray-500" />
+                                )}
                                 {getDisplayName(customer)}
                               </div>
-                              <div className="text-sm text-gray-500">{customer.email}</div>
+                              <div className="text-sm text-gray-500">
+                                {customer.email || customer.customer_number}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {getCustomerSubtitle(customer)}
+                              </div>
                             </div>
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="font-medium text-gray-900">
-                            {customer.company || '-'}
+                          <Badge variant="outline" className="capitalize">
+                            {customer.customer_type === 'company' ? 'Unternehmen' : 'Person'}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4">
+                          <Badge className={getStatusColor(customer.customer_status)}>
+                            {customer.customer_status}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className={`flex items-center ${getPriorityColor(customer.priority)}`}>
+                            {customer.priority === 'critical' && <Star className="h-3 w-3 mr-1" />}
+                            <span className="capitalize text-sm">{customer.priority}</span>
                           </div>
                         </td>
                         <td className="py-3 px-4">
                           <div className="text-sm text-gray-900">
-                            {customer.phone || '-'}
+                            {customer.phone || customer.mobile || '-'}
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="text-sm text-gray-900">
-                            {customer.created_at ? new Date(customer.created_at).toLocaleDateString('de-DE') : '-'}
+                          <div className="text-sm text-gray-900 flex items-center">
+                            {customer.last_activity_date ? (
+                              <>
+                                <Clock className="h-3 w-3 mr-1 text-gray-400" />
+                                {new Date(customer.last_activity_date).toLocaleDateString('de-DE')}
+                              </>
+                            ) : (
+                              '-'
+                            )}
                           </div>
                         </td>
                         <td className="py-3 px-4">
@@ -293,6 +357,21 @@ export default function CustomersPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Customer Form Modal */}
+        {showCustomerForm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <CustomerForm
+                onSuccess={() => {
+                  setShowCustomerForm(false)
+                  loadCustomers() // Refresh customer list
+                }}
+                onClose={() => setShowCustomerForm(false)}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   )

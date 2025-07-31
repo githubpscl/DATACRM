@@ -3,6 +3,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/components/auth-provider'
+import { useState, useEffect } from 'react'
+import { getAnalyticsData } from '@/lib/supabase'
 import { 
   Users, 
   Mail, 
@@ -19,13 +21,16 @@ import {
   AlertCircle
 } from 'lucide-react'
 
-const stats = {
-  totalCustomers: 12847,
-  emailsSent: 45632,
-  revenue: 284750,
-  conversionRate: 23.4,
-  openRate: 31.2,
-  clickRate: 8.7
+interface AnalyticsData {
+  totalCustomers: number
+  activeCustomers: number
+  newCustomersThisMonth: number
+  leadsCount: number
+  prospectsCount: number
+  customerGrowthRate: number
+  customersByStatus: { [key: string]: number }
+  customersByType: { person: number; company: number }
+  topIndustries: { industry: string; count: number }[]
 }
 
 const recentActivity = [
@@ -81,6 +86,31 @@ const quickActions = [
 
 export default function DashboardOverview() {
   const { user } = useAuth()
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadAnalyticsData()
+  }, [])
+
+  const loadAnalyticsData = async () => {
+    try {
+      setLoading(true)
+      const { data, error } = await getAnalyticsData()
+      
+      if (error) {
+        console.error('Error loading analytics data:', error)
+        setAnalyticsData(null)
+      } else {
+        setAnalyticsData(data as AnalyticsData)
+      }
+    } catch (error) {
+      console.error('Error loading analytics data:', error)
+      setAnalyticsData(null)
+    } finally {
+      setLoading(false)
+    }
+  }
   
   // Check if user is super admin
   const isSuperAdmin = user?.email === 'testdatacrmpascal@gmail.com'
@@ -139,7 +169,9 @@ export default function DashboardOverview() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCustomers.toLocaleString()}</div>
+            <div className="text-2xl font-bold">
+              {loading ? '...' : (analyticsData?.totalCustomers.toLocaleString() || '0')}
+            </div>
             <p className="text-xs text-muted-foreground">
               +12% vom letzten Monat
             </p>
@@ -152,7 +184,9 @@ export default function DashboardOverview() {
             <Mail className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.emailsSent.toLocaleString()}</div>
+            <div className="text-2xl font-bold">
+              {loading ? '...' : (analyticsData?.activeCustomers.toLocaleString() || '0')}
+            </div>
             <p className="text-xs text-muted-foreground">
               +8% vom letzten Monat
             </p>
@@ -165,7 +199,9 @@ export default function DashboardOverview() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€{stats.revenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">
+              {loading ? '...' : `${analyticsData?.leadsCount.toLocaleString() || '0'} Leads`}
+            </div>
             <p className="text-xs text-muted-foreground">
               +23% vom letzten Monat
             </p>
@@ -178,7 +214,9 @@ export default function DashboardOverview() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.conversionRate}%</div>
+            <div className="text-2xl font-bold">
+              {loading ? '...' : `${analyticsData?.customerGrowthRate || 0}%`}
+            </div>
             <p className="text-xs text-muted-foreground">
               +2.1% vom letzten Monat
             </p>
@@ -191,7 +229,9 @@ export default function DashboardOverview() {
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.openRate}%</div>
+            <div className="text-2xl font-bold">
+              {loading ? '...' : `${analyticsData?.newCustomersThisMonth || 0}`}
+            </div>
             <p className="text-xs text-muted-foreground">
               +1.2% vom letzten Monat
             </p>
@@ -204,7 +244,9 @@ export default function DashboardOverview() {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.clickRate}%</div>
+            <div className="text-2xl font-bold">
+              {loading ? '...' : `${analyticsData?.prospectsCount || 0}`}
+            </div>
             <p className="text-xs text-muted-foreground">
               +0.8% vom letzten Monat
             </p>

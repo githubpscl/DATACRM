@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase, signIn, signUp, signOut } from '@/lib/supabase'
+import { supabase, signIn, signUp, signOut, createUserProfile, getCurrentUserOrganization } from '@/lib/supabase'
+import { User as DatabaseUser } from '@/types/database'
 
 interface User {
   id: string
@@ -10,11 +11,11 @@ interface User {
   firstName?: string
   lastName?: string
   role: string
-  companyId?: string
-  company?: {
+  organizationId?: string
+  organization?: {
     id: string
     name: string
-    domain?: string
+    subscription_plan?: string
   }
 }
 
@@ -33,7 +34,7 @@ interface RegisterData {
   password: string
   firstName?: string
   lastName?: string
-  companyName?: string
+  organizationName?: string
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -283,8 +284,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           firstName: 'Demo',
           lastName: 'User',
           role: 'admin',
-          companyId: 'demo-company',
-          company: {
+          organizationId: 'demo-company',
+          organization: {
             id: 'demo-company',
             name: 'Demo Company'
           }
@@ -304,8 +305,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           firstName: 'Super',
           lastName: 'Admin',
           role: 'super_admin',
-          companyId: 'system',
-          company: {
+          organizationId: 'system',
+          organization: {
             id: 'system',
             name: 'System Administration'
           }
@@ -352,14 +353,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error
 
       if (authData.user) {
-        // Update user metadata
-        await supabase.auth.updateUser({
-          data: {
-            firstName: data.firstName,
-            lastName: data.lastName,
-            companyName: data.companyName
-          }
-        })
+        // Create user profile in our database
+        const userProfileData = {
+          id: authData.user.id,
+          email: authData.user.email || '',
+          first_name: data.firstName,
+          last_name: data.lastName,
+          role: 'user'
+        }
+
+        const { error: profileError } = await createUserProfile(userProfileData)
+        if (profileError) {
+          console.error('Failed to create user profile:', profileError)
+        }
 
         const userData: User = {
           id: authData.user.id,

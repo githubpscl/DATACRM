@@ -98,11 +98,11 @@ export default function OrganizationsPage() {
           }
         } else {
           // Regular users see their organization only
-          if (user.companyId) {
+          if (user.organization?.id) {
             setOrganizations([{
-              id: user.companyId,
-              name: user.company?.name || 'Ihre Organisation',
-              domain: user.company?.domain,
+              id: user.organization.id,
+              name: user.organization.name || 'Ihre Organisation',
+              domain: '',
               created_at: new Date().toISOString(),
               user_count: 1,
               admin_count: 1
