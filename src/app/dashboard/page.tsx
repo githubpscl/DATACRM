@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import LoadingSpinner from '@/components/ui/loading-spinner'
 import DashboardLayout from '@/components/dashboard/layout'
 import DashboardOverview from '@/components/dashboard/overview'
+import OrganizationGuard from '@/components/organization/organization-guard'
 import { isSuperAdmin } from '@/lib/supabase'
 
 export default function DashboardPage() {
@@ -60,8 +61,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <DashboardLayout>
-      <DashboardOverview />
-    </DashboardLayout>
+    <OrganizationGuard>
+      <DashboardLayout>
+        <DashboardOverview />
+      </DashboardLayout>
+    </OrganizationGuard>
   )
 }

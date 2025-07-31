@@ -48,6 +48,131 @@ export const getCurrentUser = async () => {
   return user
 }
 
+// Multi-Tenant Organization Functions
+export const getCurrentUserOrganization = async () => {
+  const { data, error } = await supabase
+    .from('users')
+    .select(`
+      organization_id,
+      role,
+      organization:organizations(*)
+    `)
+    .eq('id', (await supabase.auth.getUser()).data.user?.id)
+    .single()
+  
+  return { data, error }
+}
+
+export const userHasOrganization = async () => {
+  const result = await getCurrentUserOrganization()
+  return result.data?.organization_id !== null
+}
+
+export const getAvailableOrganizationsForJoin = async () => {
+  const { data, error } = await supabase.rpc('get_available_organizations_for_join')
+  return { data, error }
+}
+
+export const createJoinRequest = async (request: {
+  organization_id: string
+  admin_email: string
+  message?: string
+}) => {
+  const user = await getCurrentUser()
+  if (!user) return { data: null, error: 'Not authenticated' }
+
+  const { data, error } = await supabase
+    .from('organization_join_requests')
+    .insert([{
+      user_id: user.id,
+      organization_id: request.organization_id,
+      requested_by_email: user.email,
+      message: request.message
+    }])
+    .select()
+    .single()
+  
+  // TODO: Send email notification to admin_email
+  
+  return { data, error }
+}
+
+export const getUserJoinRequests = async () => {
+  const { data, error } = await supabase
+    .from('organization_join_requests')
+    .select(`
+      *,
+      organization:organizations(name)
+    `)
+    .order('requested_at', { ascending: false })
+  
+  return { data, error }
+}
+
+export const getOrganizationJoinRequests = async (organizationId: string) => {
+  const { data, error } = await supabase
+    .from('organization_join_requests')
+    .select(`
+      *,
+      user:auth.users(email)
+    `)
+    .eq('organization_id', organizationId)
+    .order('requested_at', { ascending: false })
+  
+  return { data, error }
+}
+
+export const approveJoinRequest = async (requestId: string) => {
+  const { data: request, error: fetchError } = await supabase
+    .from('organization_join_requests')
+    .select('user_id, organization_id')
+    .eq('id', requestId)
+    .single()
+  
+  if (fetchError || !request) return { data: null, error: fetchError }
+  
+  // Start transaction-like operations
+  // 1. Update user's organization
+  const { error: userError } = await supabase
+    .from('users')
+    .update({ 
+      organization_id: request.organization_id,
+      role: 'user' // Default role
+    })
+    .eq('id', request.user_id)
+  
+  if (userError) return { data: null, error: userError }
+  
+  // 2. Update request status
+  const { data, error } = await supabase
+    .from('organization_join_requests')
+    .update({ 
+      status: 'approved',
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: (await getCurrentUser())?.id
+    })
+    .eq('id', requestId)
+    .select()
+    .single()
+  
+  return { data, error }
+}
+
+export const rejectJoinRequest = async (requestId: string) => {
+  const { data, error } = await supabase
+    .from('organization_join_requests')
+    .update({ 
+      status: 'rejected',
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: (await getCurrentUser())?.id
+    })
+    .eq('id', requestId)
+    .select()
+    .single()
+  
+  return { data, error }
+}
+
 // Database helpers - Organizations
 export const getCurrentUserOrganization = async () => {
   const user = await getCurrentUser()
