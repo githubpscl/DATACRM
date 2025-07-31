@@ -58,7 +58,13 @@ export default function OrganizationsPage() {
   const [selectedOrgName, setSelectedOrgName] = useState<string>('')
   
   // User management states
-  const [orgUsers, setOrgUsers] = useState<any[]>([])
+  const [orgUsers, setOrgUsers] = useState<Array<{
+    id: string
+    email: string
+    role: string
+    name: string
+    created_at: string
+  }>>([])
   const [loadingUsers, setLoadingUsers] = useState(false)
   const [newAdminEmail, setNewAdminEmail] = useState('')
   const [addingAdmin, setAddingAdmin] = useState(false)
@@ -179,7 +185,12 @@ export default function OrganizationsPage() {
         ])
       } else {
         // Transform API data to match our interface
-        const transformedUsers = (data || []).map((item: any) => ({
+        const transformedUsers = (data || []).map((item: {
+          id: string
+          user?: { id: string; email: string; name?: string }
+          role?: string
+          created_at: string
+        }) => ({
           id: item.user?.id || item.id,
           email: item.user?.email || 'unknown@example.com',
           role: item.role || 'user',
@@ -228,10 +239,10 @@ export default function OrganizationsPage() {
 
     setAddingAdmin(true)
     try {
-      const { data, error } = await addAdminToOrg(newAdminEmail, selectedOrgId)
+      const { error } = await addAdminToOrg(newAdminEmail, selectedOrgId)
       
       if (error) {
-        const errorMessage = (error as any)?.message || 'Unbekannter Fehler'
+        const errorMessage = (error as { message?: string })?.message || 'Unbekannter Fehler'
         alert(`Fehler beim Hinzufügen des Admins: ${errorMessage}`)
         return
       }
@@ -268,10 +279,10 @@ export default function OrganizationsPage() {
         domain: editingOrgDomain || undefined
       }
       
-      const { data, error } = await updateOrganization(selectedOrgId, updates)
+      const { error } = await updateOrganization(selectedOrgId, updates)
       
       if (error) {
-        const errorMessage = (error as any)?.message || 'Unbekannter Fehler'
+        const errorMessage = (error as { message?: string })?.message || 'Unbekannter Fehler'
         alert(`Fehler beim Speichern der Einstellungen: ${errorMessage}`)
         return
       }

@@ -414,7 +414,7 @@ export const addAdminToOrg = async (userEmail: string, orgId: string) => {
     }
     
     // Check if user is already in this organization
-    const { data: existingRole, error: roleCheckError } = await supabase
+    const { data: existingRole } = await supabase
       .from('user_roles')
       .select('id')
       .eq('user_id', userProfile.id)
