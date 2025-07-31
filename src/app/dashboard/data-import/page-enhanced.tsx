@@ -99,7 +99,17 @@ export default function DataImportPage() {
         
         if (!rpcError && rpcUsers && rpcUsers.length > 0) {
           console.log('Loaded users from RPC function:', rpcUsers)
-          const transformedUsers: AppUser[] = rpcUsers.map((user: any) => ({
+          const transformedUsers: AppUser[] = rpcUsers.map((user: {
+            id: string
+            email: string
+            created_at: string
+            last_sign_in_at?: string
+            email_confirmed_at?: string
+            raw_user_meta_data?: {
+              name?: string
+              firstName?: string
+            }
+          }) => ({
             id: user.id,
             email: user.email || 'Unbekannt',
             created_at: user.created_at,
@@ -144,7 +154,14 @@ export default function DataImportPage() {
 
         if (!viewError && viewUsers && viewUsers.length > 0) {
           console.log('Loaded users from view:', viewUsers)
-          const transformedUsers: AppUser[] = viewUsers.map((user: any) => ({
+          const transformedUsers: AppUser[] = viewUsers.map((user: {
+            id: string
+            email: string
+            created_at: string
+            last_sign_in_at?: string
+            email_confirmed_at?: string
+            name?: string
+          }) => ({
             id: user.id,
             email: user.email || 'Unbekannt',
             created_at: user.created_at,
