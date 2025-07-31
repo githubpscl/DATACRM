@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/dashboard/layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -42,6 +43,7 @@ interface Organization {
 }
 
 export default function SuperAdminPage() {
+  const router = useRouter()
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [loading, setLoading] = useState(true)
   const [isAuthorized, setIsAuthorized] = useState(false)
@@ -58,6 +60,22 @@ export default function SuperAdminPage() {
       })
     } else {
       console.log('No users found or error:', result.error)
+    }
+  }
+
+  const handleJoinOrganization = async (orgId: string, orgName: string) => {
+    try {
+      // Implementiere die Logik zum Beitreten einer Organisation
+      // Hier würde normalerweise der Super-Admin temporär der Organisation beitreten
+      // um sie zu verwalten
+      console.log('Joining organization:', orgId, orgName)
+      
+      // Für jetzt nur zu den Einstellungen der Organisation navigieren
+      // Später kann hier eine echte "Join" Funktionalität implementiert werden
+      router.push(`/dashboard/settings/organizations/${orgId}`)
+    } catch (error) {
+      console.error('Error joining organization:', error)
+      alert('Fehler beim Beitreten der Organisation')
     }
   }
   
@@ -436,9 +454,14 @@ export default function SuperAdminPage() {
                           <Users className="h-3 w-3 mr-1" />
                           {org.user_count || 0} Nutzer
                         </Badge>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleJoinOrganization(org.id, org.name)}
+                          className="text-purple-600 border-purple-600 hover:bg-purple-50"
+                        >
                           <Settings className="h-4 w-4 mr-2" />
-                          Verwalten
+                          Beitreten & Verwalten
                         </Button>
                       </div>
                     </div>

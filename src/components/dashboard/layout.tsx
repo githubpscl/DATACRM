@@ -12,7 +12,10 @@ import {
   PenTool,
   GitBranch,
   Megaphone,
-  Settings
+  Settings,
+  Crown,
+  Building2,
+  Shield
 } from 'lucide-react'
 
 interface SubNavItem {
@@ -101,6 +104,37 @@ const navigation: NavigationItem[] = [
   }
 ]
 
+// Super Admin Navigation - nur Admin-Funktionen
+const superAdminNavigation: NavigationItem[] = [
+  {
+    name: 'Organisationen',
+    href: '/dashboard/admin/organizations',
+    icon: Building2,
+    subItems: [
+      { name: 'Alle Organisationen', href: '/dashboard/admin/organizations' },
+      { name: 'Neue Organisation', href: '/dashboard/admin/organizations/new' }
+    ]
+  },
+  {
+    name: 'System-Verwaltung',
+    href: '/dashboard/settings',
+    icon: Shield,
+    subItems: [
+      { name: 'Alle Benutzer', href: '/dashboard/settings/users' },
+      { name: 'System-Einstellungen', href: '/dashboard/settings/system' }
+    ]
+  },
+  {
+    name: 'Super Admin',
+    href: '/dashboard/admin',
+    icon: Crown,
+    subItems: [
+      { name: 'Dashboard', href: '/dashboard/admin' },
+      { name: 'Statistiken', href: '/dashboard/admin/stats' }
+    ]
+  }
+]
+
 interface DashboardLayoutProps {
   children: ReactNode
 }
@@ -166,8 +200,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return null
   }
 
+  // Wähle Navigation basierend auf Benutzerrolle
+  const currentNavigation = isSuper ? superAdminNavigation : navigation
+  
   // Filter navigation based on permissions
-  const filteredNavigation = navigation.filter(item => {
+  const filteredNavigation = currentNavigation.filter(item => {
     if (item.name === 'Administration') {
       // Only show admin section to super admins and organization admins
       return isSuper || userRole === 'organization_admin'
