@@ -25,13 +25,6 @@ export default function SuperAdminDashboard() {
   })
   const [loadingStats, setLoadingStats] = useState(true)
 
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login')
-    }
-  }, [user, loading, router])
-
   // Load statistics
   useEffect(() => {
     const loadStats = async () => {
@@ -61,12 +54,16 @@ export default function SuperAdminDashboard() {
     }
   }, [user])
 
-  if (loading || !user) {
+  if (loading || loadingStats) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     )
+  }
+
+  if (!user) {
+    return null
   }
 
   return (

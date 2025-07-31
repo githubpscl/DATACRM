@@ -55,13 +55,6 @@ export default function OrganizationsPage() {
     phone: ''
   })
 
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login')
-    }
-  }, [user, authLoading, router])
-
   // Load organizations
   const loadOrganizations = useCallback(async () => {
     if (!user) return
@@ -155,9 +148,11 @@ export default function OrganizationsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        </div>
+      </DashboardLayout>
     )
   }
 
