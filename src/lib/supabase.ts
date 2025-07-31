@@ -282,16 +282,23 @@ export const addCustomerActivity = async (activity: {
 export const createOrganization = async (org: {
   name: string
   description?: string
-  admin_email: string
+  admin_email?: string // Optional admin email
+  industry?: string
+  website?: string
+  phone?: string
 }) => {
   try {
     console.log('Creating organization:', org)
     
-    // Directly try to insert - if table doesn't exist, we'll get a proper error
+    // Create organization data without non-existent columns
     const insertData = {
       name: org.name,
-      admin_email: org.admin_email,
-      domain: org.description || null
+      email: org.admin_email || null, // Use 'email' field instead of 'admin_email'
+      industry: org.industry || null,
+      website: org.website || null,
+      phone: org.phone || null,
+      subscription_plan: 'free', // Default plan
+      is_active: true
     }
     
     console.log('Inserting data:', insertData)

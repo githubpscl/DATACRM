@@ -21,14 +21,21 @@ import {
   Shield, 
   Settings,
   Crown,
-  AlertCircle
+  AlertCircle,
+  Mail,
+  ExternalLink,
+  Phone
 } from 'lucide-react'
 
 interface Organization {
   id: string
   name: string
   description?: string
-  admin_email: string
+  email?: string // Changed from admin_email to email
+  industry?: string
+  website?: string
+  phone?: string
+  subscription_plan?: string
   created_at: string
   user_count?: number
 }
@@ -44,7 +51,10 @@ export default function SuperAdminPage() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    admin_email: ''
+    admin_email: '', // Optional admin email
+    industry: '',
+    website: '',
+    phone: ''
   })
 
   const checkAccess = useCallback(async () => {
@@ -90,8 +100,9 @@ export default function SuperAdminPage() {
   const handleCreateOrg = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.name.trim() || !formData.admin_email.trim()) {
-      alert('Name und Admin-E-Mail sind erforderlich.')
+    // Only require name - admin email is now optional
+    if (!formData.name.trim()) {
+      alert('Organisation Name ist erforderlich.')
       return
     }
 
@@ -102,7 +113,10 @@ export default function SuperAdminPage() {
       const result = await createOrganization({
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
-        admin_email: formData.admin_email.trim()
+        admin_email: formData.admin_email.trim() || undefined, // Optional
+        industry: formData.industry.trim() || undefined,
+        website: formData.website.trim() || undefined,
+        phone: formData.phone.trim() || undefined
       })
       
       console.log('CreateOrganization result:', result)
@@ -112,7 +126,14 @@ export default function SuperAdminPage() {
         alert(`Fehler beim Erstellen der Organisation: ${result.error.message || 'Unbekannter Fehler'}`)
       } else {
         alert(`✅ Organisation "${formData.name}" erfolgreich erstellt!`)
-        setFormData({ name: '', description: '', admin_email: '' })
+        setFormData({ 
+          name: '', 
+          description: '', 
+          admin_email: '',
+          industry: '',
+          website: '',
+          phone: ''
+        })
         setShowCreateForm(false)
         await loadOrganizations()
       }
@@ -213,17 +234,17 @@ export default function SuperAdminPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="admin-email">Administrator E-Mail *</Label>
+                    <Label htmlFor="admin-email">Administrator E-Mail (optional)</Label>
                     <Input
                       id="admin-email"
                       type="email"
                       value={formData.admin_email}
                       onChange={(e) => setFormData(prev => ({ ...prev, admin_email: e.target.value }))}
                       placeholder="admin@unternehmen.de"
-                      required
                     />
                   </div>
                 </div>
+                
                 <div>
                   <Label htmlFor="org-description">Beschreibung (optional)</Label>
                   <Input
@@ -233,6 +254,39 @@ export default function SuperAdminPage() {
                     placeholder="Kurze Beschreibung der Organisation"
                   />
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="industry">Branche (optional)</Label>
+                    <Input
+                      id="industry"
+                      value={formData.industry}
+                      onChange={(e) => setFormData(prev => ({ ...prev, industry: e.target.value }))}
+                      placeholder="IT, Healthcare, Finance..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="website">Website (optional)</Label>
+                    <Input
+                      id="website"
+                      type="url"
+                      value={formData.website}
+                      onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                      placeholder="https://example.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Telefon (optional)</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="+49 123 456789"
+                    />
+                  </div>
+                </div>
+
                 <div className="flex gap-2 pt-4">
                   <Button 
                     type="submit" 
@@ -246,7 +300,14 @@ export default function SuperAdminPage() {
                     variant="outline"
                     onClick={() => {
                       setShowCreateForm(false)
-                      setFormData({ name: '', description: '', admin_email: '' })
+                      setFormData({ 
+                        name: '', 
+                        description: '', 
+                        admin_email: '',
+                        industry: '',
+                        website: '',
+                        phone: ''
+                      })
                     }}
                   >
                     Abbrechen
@@ -295,13 +356,42 @@ export default function SuperAdminPage() {
                             {getInitials(org.name)}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
+                        <div className="flex-1">
                           <h4 className="font-medium text-gray-900">{org.name}</h4>
-                          <p className="text-sm text-gray-600">{org.description || 'Keine Beschreibung'}</p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="text-xs text-gray-500">
-                              Admin: {org.admin_email}
-                            </span>
+                          {org.description && (
+                            <p className="text-sm text-gray-600">{org.description}</p>
+                          )}
+                          
+                          <div className="flex flex-wrap items-center gap-4 mt-2">
+                            {org.email && (
+                              <span className="text-xs text-gray-500 flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                Admin: {org.email}
+                              </span>
+                            )}
+                            {org.industry && (
+                              <span className="text-xs text-gray-500 flex items-center gap-1">
+                                <Building2 className="h-3 w-3" />
+                                {org.industry}
+                              </span>
+                            )}
+                            {org.website && (
+                              <a 
+                                href={org.website} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                Website
+                              </a>
+                            )}
+                            {org.phone && (
+                              <span className="text-xs text-gray-500 flex items-center gap-1">
+                                <Phone className="h-3 w-3" />
+                                {org.phone}
+                              </span>
+                            )}
                             <span className="text-xs text-gray-500">
                               Erstellt: {new Date(org.created_at).toLocaleDateString('de-DE')}
                             </span>
