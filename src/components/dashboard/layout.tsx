@@ -93,6 +93,7 @@ const navigation: NavigationItem[] = [
       { name: 'Profil', href: '/dashboard/settings/profile' },
       { name: 'Team & Berechtigungen', href: '/dashboard/settings/team' },
       { name: 'Organisationen', href: '/dashboard/settings/organizations' },
+      { name: 'Benutzerverwaltung', href: '/dashboard/settings/users' },
       { name: 'Benachrichtigungen', href: '/dashboard/settings/notifications' },
       { name: 'Sicherheit', href: '/dashboard/settings/security' },
       { name: 'Integrationen', href: '/dashboard/settings/integrations' }

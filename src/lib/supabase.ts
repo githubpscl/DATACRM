@@ -446,3 +446,78 @@ export const addAdminToOrg = async (userEmail: string, orgId: string) => {
     return { data: null, error }
   }
 }
+
+// Get all users for super admin view
+export const getAllUsers = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select(`
+        *,
+        user_roles (
+          role,
+          organization:organizations (
+            id,
+            name
+          )
+        )
+      `)
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Error getting all users:', error)
+      return { data: null, error }
+    }
+    
+    return { data, error: null }
+  } catch (error) {
+    console.error('Error in getAllUsers:', error)
+    return { data: null, error }
+  }
+}
+
+// Get users without organization
+export const getUnassignedUsers = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .not('id', 'in', 
+        supabase
+          .from('user_roles')
+          .select('user_id')
+      )
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Error getting unassigned users:', error)
+      return { data: null, error }
+    }
+    
+    return { data, error: null }
+  } catch (error) {
+    console.error('Error in getUnassignedUsers:', error)
+    return { data: null, error }
+  }
+}
+
+// Update user profile
+export const updateUserProfile = async (userId: string, updates: { name?: string; email?: string }) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+    
+    if (error) {
+      console.error('Error updating user profile:', error)
+      return { data: null, error }
+    }
+    
+    return { data, error: null }
+  } catch (error) {
+    console.error('Error in updateUserProfile:', error)
+    return { data: null, error }
+  }
+}
