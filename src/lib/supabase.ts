@@ -287,26 +287,7 @@ export const createOrganization = async (org: {
   try {
     console.log('Creating organization:', org)
     
-    // First, try to check if the table exists by doing a simple query
-    const { data: testData, error: testError } = await supabase
-      .from('organizations')
-      .select('count')
-      .limit(1)
-    
-    console.log('Table test result:', { testData, testError })
-    
-    if (testError) {
-      console.error('Organizations table does not exist or is not accessible:', testError)
-      return { 
-        data: null, 
-        error: { 
-          message: 'Database table "organizations" not found. Please run the database setup script first.',
-          details: testError
-        } 
-      }
-    }
-    
-    // If table exists, try to insert
+    // Directly try to insert - if table doesn't exist, we'll get a proper error
     const insertData = {
       name: org.name,
       admin_email: org.admin_email,

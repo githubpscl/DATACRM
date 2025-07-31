@@ -352,18 +352,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error
 
       if (authData.user) {
-        // Create user profile in our database
+        // Create user profile in our database - NO organization creation
         const userProfileData = {
           id: authData.user.id,
           email: authData.user.email || '',
           first_name: data.firstName,
           last_name: data.lastName,
-          role: 'user'
+          organization_id: undefined, // No organization assigned initially
+          role: 'user' // Default role is 'user', not super_admin
         }
 
         const { error: profileError } = await createUserProfile(userProfileData)
         if (profileError) {
           console.error('Failed to create user profile:', profileError)
+          throw new Error('Failed to create user profile: ' + profileError.message)
         }
 
         const userData: User = {
@@ -371,7 +373,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: authData.user.email || '',
           firstName: data.firstName || '',
           lastName: data.lastName || '',
-          role: 'user'
+          role: 'user', // Default role
+          organizationId: undefined // No organization initially
         }
         setUser(userData)
         setToken(authData.session?.access_token || null)

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, Lock, User, Building } from 'lucide-react'
+import { Loader2, Mail, Lock, User } from 'lucide-react'
 import Link from 'next/link'
 
 interface LoginFormData {
@@ -22,7 +22,6 @@ interface RegisterFormData {
   confirmPassword: string
   firstName: string
   lastName: string
-  companyName: string
 }
 
 export default function AuthPage() {
@@ -40,8 +39,7 @@ export default function AuthPage() {
     password: '',
     confirmPassword: '',
     firstName: '',
-    lastName: '',
-    companyName: ''
+    lastName: ''
   })
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -81,8 +79,8 @@ export default function AuthPage() {
         email: registerData.email,
         password: registerData.password,
         firstName: registerData.firstName,
-        lastName: registerData.lastName,
-        organizationName: registerData.companyName
+        lastName: registerData.lastName
+        // organizationName removed - organizations only created by super admins
       })
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Registrierung fehlgeschlagen'
@@ -220,21 +218,6 @@ export default function AuthPage() {
                         placeholder="Doe"
                         value={registerData.lastName}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegisterData({ ...registerData, lastName: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="companyName">Company Name</Label>
-                    <div className="relative">
-                      <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="companyName"
-                        type="text"
-                        placeholder="Your Company"
-                        className="pl-10"
-                        value={registerData.companyName}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegisterData({ ...registerData, companyName: e.target.value })}
                         required
                       />
                     </div>
