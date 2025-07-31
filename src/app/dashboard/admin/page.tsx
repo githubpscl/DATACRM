@@ -44,6 +44,15 @@ export default function SuperAdminDashboard() {
         }
 
         console.log('Checking super admin status for:', user.email)
+        
+        // TEMPORÄR: Zugriff für testdatacrmpascal@gmail.com immer erlauben
+        if (user.email === 'testdatacrmpascal@gmail.com') {
+          console.log('Emergency access granted for testdatacrmpascal@gmail.com')
+          setIsAuthorized(true)
+          setLoading(false)
+          return
+        }
+        
         const isSuper = await isSuperAdmin(user.email)
         console.log('isSuperAdmin result:', isSuper)
         

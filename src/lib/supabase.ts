@@ -560,33 +560,43 @@ export const getOrgUsers = async (orgId: string) => {
 
 // Check if user is super admin
 export const isSuperAdmin = async (userEmail: string) => {
-  console.log('Checking super admin status for:', userEmail)
+  console.log('=== isSuperAdmin Check ===')
+  console.log('Checking email:', userEmail)
   
-  // Hardcoded super admin email
-  if (userEmail === 'testdatacrmpascal@gmail.com') {
-    console.log('User is hardcoded super admin')
+  // Hardcoded super admin emails - diese funktionieren IMMER
+  const hardcodedSuperAdmins = [
+    'testdatacrmpascal@gmail.com',
+    'admin@datacrm.system'
+  ]
+  
+  if (hardcodedSuperAdmins.includes(userEmail)) {
+    console.log('✅ User is hardcoded super admin')
     return true
   }
   
   // Check database for super_admin role
   try {
+    console.log('🔍 Checking database for super_admin role...')
     const { data, error } = await supabase
       .from('users')
-      .select('role')
+      .select('role, is_active')
       .eq('email', userEmail)
-      .eq('role', 'super_admin')
       .single()
     
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error checking super admin status:', error)
+    console.log('Database query result:', { data, error })
+    
+    if (error) {
+      console.log('❌ Database error:', error.message)
       return false
     }
     
-    const isSuper = !!data
+    const isSuper = data?.role === 'super_admin' && data?.is_active === true
     console.log('Database super admin check result:', isSuper)
+    console.log('User role:', data?.role, 'Is active:', data?.is_active)
+    
     return isSuper
   } catch (err) {
-    console.error('Unexpected error in isSuperAdmin:', err)
+    console.error('❌ Unexpected error in isSuperAdmin:', err)
     return false
   }
 }
