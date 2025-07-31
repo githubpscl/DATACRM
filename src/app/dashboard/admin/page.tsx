@@ -123,7 +123,7 @@ export default function SuperAdminDashboard() {
               <p className="text-xs text-gray-500">
                 Öffnen Sie die Browser-Konsole (F12) für detaillierte Logs.
                 <br />
-                Verwenden Sie das SQL-Script "create-super-admin-user.sql" um sich als Super Admin zu setzen.
+                Verwenden Sie das SQL-Script &quot;create-super-admin-user.sql&quot; um sich als Super Admin zu setzen.
               </p>
             </div>
           </div>
