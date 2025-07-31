@@ -51,7 +51,7 @@ export interface User {
   department?: string
   employee_id?: string
   role: 'super_admin' | 'org_admin' | 'manager' | 'user'
-  permissions: Record<string, any>
+  permissions: Record<string, unknown>
   is_active: boolean
   is_verified: boolean
   email_verified_at?: string
@@ -132,7 +132,7 @@ export interface Customer {
   // Notes
   notes?: string
   internal_notes?: string
-  custom_fields?: Record<string, any>
+  custom_fields?: Record<string, unknown>
   // Activity tracking
   last_order_date?: string
   total_orders: number
@@ -187,7 +187,7 @@ export interface CustomerActivity {
   duration_minutes?: number
   status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
   priority: 'low' | 'normal' | 'high' | 'urgent'
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   attachments?: string[]
   created_at: string
   updated_at: string
@@ -199,7 +199,7 @@ export interface ApiResponse<T> {
   data: T | null
   error?: {
     message: string
-    details?: any
+    details?: unknown
   } | null
 }
 
@@ -244,5 +244,5 @@ export interface ActivityFormData {
   scheduled_at?: string
   duration_minutes?: number
   priority?: 'low' | 'normal' | 'high' | 'urgent'
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }

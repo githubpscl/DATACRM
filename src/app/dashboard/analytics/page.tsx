@@ -4,14 +4,12 @@ import DashboardLayout from '@/components/dashboard/layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useState, useEffect } from 'react'
-import { getCustomers, getAnalyticsData } from '@/lib/supabase'
+import { getAnalyticsData } from '@/lib/supabase'
 import { 
   BarChart3,
   TrendingUp,
   Users,
-  Mail,
   DollarSign,
-  Calendar,
   Target
 } from 'lucide-react'
 
@@ -26,37 +24,6 @@ interface AnalyticsData {
   customersByType: { person: number; company: number }
   topIndustries: { industry: string; count: number }[]
 }
-
-const performanceMetrics = [
-  {
-    title: 'Beste E-Mail-Kampagne',
-    value: 'Newsletter Januar',
-    metric: '47.2% Öffnungsrate',
-    change: '+12.4%',
-    trend: 'up'
-  },
-  {
-    title: 'Top Customer Journey',
-    value: 'Willkommens-Sequenz',
-    metric: '34.8% Conversion',
-    change: '+8.1%',
-    trend: 'up'
-  },
-  {
-    title: 'Stärkste Region',
-    value: 'Deutschland Nord',
-    metric: '€48.2k Umsatz',
-    change: '+23.7%',
-    trend: 'up'
-  },
-  {
-    title: 'Aktivste Kundengruppe',
-    value: 'Premium Segment',
-    metric: '89% Engagement',
-    change: '+5.3%',
-    trend: 'up'
-  }
-]
 
 export default function AnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)

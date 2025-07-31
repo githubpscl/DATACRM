@@ -12,7 +12,7 @@ import { X, User, Building2, Mail, Phone, MapPin, Tag, Star } from 'lucide-react
 interface CustomerFormProps {
   onClose: () => void
   onSuccess: () => void
-  customer?: any // For editing existing customers
+  customer?: CustomerFormData // For editing existing customers
 }
 
 export default function CustomerForm({ onClose, onSuccess, customer }: CustomerFormProps) {
@@ -50,14 +50,14 @@ export default function CustomerForm({ onClose, onSuccess, customer }: CustomerF
         // Update existing customer logic would go here
         console.log('Update customer not implemented yet')
       } else {
-        const { data, error } = await addCustomer(formData)
-        if (error) throw error
+        await addCustomer(formData)
       }
       
       onSuccess()
       onClose()
-    } catch (err: any) {
-      setError(err.message || 'Ein Fehler ist aufgetreten')
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

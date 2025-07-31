@@ -255,7 +255,7 @@ export const addCustomerActivity = async (activity: {
   duration_minutes?: number
   status?: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
   priority?: 'low' | 'normal' | 'high' | 'urgent'
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }) => {
   const user = await getCurrentUser()
   const userOrg = await getCurrentUserOrganization()

@@ -2,8 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase, signIn, signUp, signOut, createUserProfile, getCurrentUserOrganization } from '@/lib/supabase'
-import { User as DatabaseUser } from '@/types/database'
+import { supabase, signIn, signUp, signOut, createUserProfile } from '@/lib/supabase'
 
 interface User {
   id: string
