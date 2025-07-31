@@ -15,10 +15,15 @@ import {
   Calendar,
   Settings,
   Download,
-  Play
+  Play,
+  Users,
+  Mail,
+  Clock,
+  User
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { supabase } from '@/lib/supabase'
 
 interface ImportHistory {
   id: string
@@ -58,6 +63,15 @@ interface ImportInsights {
   actionItems: string[]
 }
 
+interface AppUser {
+  id: string
+  email: string
+  created_at: string
+  last_sign_in_at?: string
+  email_confirmed_at?: string
+  name?: string
+}
+
 export default function DataImportPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -67,10 +81,55 @@ export default function DataImportPage() {
   const [fieldMapping, setFieldMapping] = useState<Record<string, string>>({})
   const [autoSync, setAutoSync] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [appUsers, setAppUsers] = useState<AppUser[]>([])
+  const [usersLoading, setUsersLoading] = useState(true)
 
   useEffect(() => {
     loadImportData()
+    loadAppUsers()
   }, [])
+
+  const loadAppUsers = async () => {
+    try {
+      setUsersLoading(true)
+      
+      // Get all users from auth.users through the admin API
+      const { data: { users }, error } = await supabase.auth.admin.listUsers()
+      
+      if (error) {
+        console.error('Error loading users:', error)
+        // Fallback: Load from profiles table
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        if (!profilesError && profilesData) {
+          const transformedUsers: AppUser[] = profilesData.map(profile => ({
+            id: profile.id,
+            email: profile.email || 'Unbekannt',
+            created_at: profile.created_at,
+            name: profile.name || profile.email?.split('@')[0] || 'Unbekannt'
+          }))
+          setAppUsers(transformedUsers)
+        }
+      } else if (users) {
+        const transformedUsers: AppUser[] = users.map(user => ({
+          id: user.id,
+          email: user.email || 'Unbekannt',
+          created_at: user.created_at,
+          last_sign_in_at: user.last_sign_in_at,
+          email_confirmed_at: user.email_confirmed_at,
+          name: user.user_metadata?.name || user.user_metadata?.firstName || user.email?.split('@')[0] || 'Unbekannt'
+        }))
+        setAppUsers(transformedUsers)
+      }
+    } catch (error) {
+      console.error('Error loading application users:', error)
+    } finally {
+      setUsersLoading(false)
+    }
+  }
 
   const loadImportData = async () => {
     try {
@@ -262,11 +321,12 @@ export default function DataImportPage() {
       </div>
 
       <Tabs defaultValue="upload" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="upload">Daten hochladen</TabsTrigger>
           <TabsTrigger value="history">Import-Verlauf</TabsTrigger>
           <TabsTrigger value="analytics">Statistiken</TabsTrigger>
           <TabsTrigger value="insights">KI-Einblicke</TabsTrigger>
+          <TabsTrigger value="users">Angemeldete Benutzer</TabsTrigger>
         </TabsList>
 
         <TabsContent value="upload" className="space-y-6">
@@ -599,6 +659,140 @@ export default function DataImportPage() {
               </Card>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="users" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Users className="h-5 w-5 mr-2" />
+                Angemeldete Benutzer der Anwendung
+              </CardTitle>
+              <CardDescription>
+                Alle Benutzer, die sich jemals in der Anwendung angemeldet haben
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {usersLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-center">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent mx-auto mb-4" />
+                    <p className="text-gray-600">Lade Benutzerdaten...</p>
+                  </div>
+                </div>
+              ) : appUsers.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium">Keine Benutzer gefunden</p>
+                  <p className="text-sm">Es haben sich noch keine Benutzer in der Anwendung angemeldet.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="bg-blue-100 p-3 rounded-lg">
+                        <Users className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold">
+                          {appUsers.length} {appUsers.length === 1 ? 'Benutzer' : 'Benutzer'}
+                        </h3>
+                        <p className="text-sm text-gray-600">Registriert und angemeldet</p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      onClick={loadAppUsers}
+                      disabled={usersLoading}
+                    >
+                      {usersLoading ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent mr-2" />
+                      ) : (
+                        <Users className="h-4 w-4 mr-2" />
+                      )}
+                      Aktualisieren
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-4">
+                    {appUsers.map((user, index) => (
+                      <div key={user.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                              {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <p className="font-medium">{user.name || 'Unbekannt'}</p>
+                                {user.email_confirmed_at && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Verifiziert
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                                <div className="flex items-center">
+                                  <Mail className="h-4 w-4 mr-1" />
+                                  {user.email}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="text-right">
+                            <div className="flex items-center text-sm text-gray-500 mb-1">
+                              <Calendar className="h-4 w-4 mr-1" />
+                              Registriert: {new Date(user.created_at).toLocaleDateString('de-DE')}
+                            </div>
+                            {user.last_sign_in_at && (
+                              <div className="flex items-center text-sm text-gray-500">
+                                <Clock className="h-4 w-4 mr-1" />
+                                Letzter Login: {new Date(user.last_sign_in_at).toLocaleDateString('de-DE')}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="mt-3 pt-3 border-t">
+                          <div className="flex items-center justify-between text-xs text-gray-500">
+                            <span>Benutzer #{index + 1}</span>
+                            <span>ID: {user.id.slice(0, 8)}...</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Summary Statistics */}
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <h4 className="font-medium text-blue-900 mb-2">Zusammenfassung</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">{appUsers.length}</div>
+                        <div className="text-blue-800">Gesamt Benutzer</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">
+                          {appUsers.filter(u => u.email_confirmed_at).length}
+                        </div>
+                        <div className="text-green-800">Verifiziert</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-orange-600">
+                          {appUsers.filter(u => u.last_sign_in_at && 
+                            new Date(u.last_sign_in_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                          ).length}
+                        </div>
+                        <div className="text-orange-800">Aktiv (7 Tage)</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
