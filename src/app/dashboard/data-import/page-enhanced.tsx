@@ -18,8 +18,7 @@ import {
   Play,
   Users,
   Mail,
-  Clock,
-  User
+  Clock
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
