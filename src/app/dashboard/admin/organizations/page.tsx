@@ -105,7 +105,7 @@ export default function OrganizationsPage() {
         phone: formData.phone.trim() || undefined
       })
       
-      if (result.success) {
+      if (result.data && !result.error) {
         console.log('Organization created successfully:', result.data)
         
         // Reset form
@@ -125,7 +125,8 @@ export default function OrganizationsPage() {
         alert('Organisation erfolgreich erstellt!')
       } else {
         console.error('Failed to create organization:', result.error)
-        alert('Fehler beim Erstellen der Organisation: ' + (result.error || 'Unbekannter Fehler'))
+        const errorMessage = result.error?.message || 'Unbekannter Fehler'
+        alert('Fehler beim Erstellen der Organisation: ' + errorMessage)
       }
     } catch (error) {
       console.error('Error creating organization:', error)
