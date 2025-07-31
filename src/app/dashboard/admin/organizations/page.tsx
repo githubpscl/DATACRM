@@ -12,7 +12,8 @@ import {
   getOrganizations, 
   createOrganization, 
   isSuperAdmin,
-  getCurrentUser 
+  getCurrentUser,
+  getAllUsers
 } from '@/lib/supabase'
 import { 
   Building2, 
@@ -46,6 +47,19 @@ export default function SuperAdminPage() {
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [creating, setCreating] = useState(false)
+
+  const debugUsers = async () => {
+    console.log('=== DEBUG: Checking all users ===')
+    const result = await getAllUsers()
+    if (result.data) {
+      console.log('Users found:', result.data.length)
+      result.data.forEach(user => {
+        console.log(`- ${user.email} (ID: ${user.id}, Role: ${user.role})`)
+      })
+    } else {
+      console.log('No users found or error:', result.error)
+    }
+  }
   
   // Form state
   const [formData, setFormData] = useState({
@@ -209,13 +223,22 @@ export default function SuperAdminPage() {
               Verwalten Sie Organisationen und deren Administratoren
             </p>
           </div>
-          <Button 
-            onClick={() => setShowCreateForm(true)}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Neue Organisation
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setShowCreateForm(true)}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Neue Organisation
+            </Button>
+            <Button 
+              onClick={debugUsers}
+              variant="outline"
+              className="text-xs"
+            >
+              Debug: Benutzer anzeigen
+            </Button>
+          </div>
         </div>
 
         {/* Create Organization Form */}

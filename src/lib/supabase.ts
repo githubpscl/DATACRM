@@ -278,6 +278,64 @@ export const addCustomerActivity = async (activity: {
   return { data, error }
 }
 
+// Create a new user manually (for admin use)
+export const createUserManually = async (userData: {
+  email: string
+  name?: string
+  role?: 'user' | 'org_admin' | 'super_admin'
+  organization_id?: string
+}) => {
+  try {
+    console.log('Creating user manually:', userData)
+    
+    // Check if user already exists
+    const { data: existingUser, error: checkError } = await supabase
+      .from('users')
+      .select('id, email')
+      .eq('email', userData.email)
+      .single()
+    
+    if (existingUser) {
+      return {
+        data: null,
+        error: {
+          message: `Benutzer mit E-Mail "${userData.email}" existiert bereits.`,
+          code: 'USER_EXISTS'
+        }
+      }
+    }
+    
+    // Create user record (this creates a user without Supabase Auth)
+    const { data, error } = await supabase
+      .from('users')
+      .insert([{
+        email: userData.email,
+        name: userData.name || null,
+        role: userData.role || 'user',
+        organization_id: userData.organization_id || null
+      }])
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Error creating user:', error)
+      return { data: null, error }
+    }
+    
+    console.log('User created successfully:', data)
+    return { data, error: null }
+  } catch (err) {
+    console.error('Unexpected error creating user:', err)
+    return {
+      data: null,
+      error: {
+        message: err instanceof Error ? err.message : 'Unknown error occurred',
+        details: err
+      }
+    }
+  }
+}
+
 // Organizations - Updated functions
 export const createOrganization = async (org: {
   name: string
@@ -320,15 +378,39 @@ export const createOrganization = async (org: {
     if (org.admin_email) {
       console.log('Attempting to assign admin role to:', org.admin_email)
       
-      // First, find the user with this email
+      // First, let's check all users to debug
+      console.log('=== DEBUG: Checking all users first ===')
+      const { data: allUsers, error: allUsersError } = await supabase
+        .from('users')
+        .select('id, email, role, organization_id')
+      
+      console.log('All users in database:', allUsers)
+      console.log('Total users found:', allUsers?.length || 0)
+      
+      if (allUsers) {
+        allUsers.forEach(u => {
+          console.log(`User: ${u.email} | ID: ${u.id} | Role: ${u.role} | Org: ${u.organization_id}`)
+        })
+      }
+      
+      // Now try to find the specific user
+      console.log('=== Searching for specific user ===')
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('id, email, role')
         .eq('email', org.admin_email)
         .single()
       
+      console.log('Search result for', org.admin_email, ':', userData)
+      console.log('Search error:', userError)
+      
       if (userError || !userData) {
-        console.error('User not found:', userError)
+        console.error('User not found. Error details:', userError)
+        console.log('Available emails in database:')
+        if (allUsers) {
+          allUsers.forEach(u => console.log(`- ${u.email}`))
+        }
+        
         // Delete the organization since admin assignment failed
         await supabase
           .from('organizations')
@@ -338,7 +420,7 @@ export const createOrganization = async (org: {
         return { 
           data: null, 
           error: { 
-            message: `Admin-Benutzer mit E-Mail "${org.admin_email}" wurde nicht in der Datenbank gefunden. Bitte stellen Sie sicher, dass sich der Benutzer zuerst registriert hat.`,
+            message: `Admin-Benutzer mit E-Mail "${org.admin_email}" wurde nicht in der Datenbank gefunden. Bitte stellen Sie sicher, dass sich der Benutzer zuerst registriert hat.\n\nVerfügbare Benutzer:\n${allUsers?.map(u => `- ${u.email}`).join('\n') || 'Keine Benutzer gefunden'}`,
             code: 'USER_NOT_FOUND'
           } 
         }
