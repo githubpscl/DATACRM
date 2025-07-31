@@ -289,7 +289,7 @@ export const createUserManually = async (userData: {
     console.log('Creating user manually:', userData)
     
     // Check if user already exists
-    const { data: existingUser, error: checkError } = await supabase
+    const { data: existingUser } = await supabase
       .from('users')
       .select('id, email')
       .eq('email', userData.email)
@@ -380,7 +380,7 @@ export const createOrganization = async (org: {
       
       // First, let's check all users to debug
       console.log('=== DEBUG: Checking all users first ===')
-      const { data: allUsers, error: allUsersError } = await supabase
+      const { data: allUsers } = await supabase
         .from('users')
         .select('id, email, role, organization_id')
       
