@@ -11,10 +11,7 @@ import {
   Users, 
   Crown,
   Settings,
-  BarChart3,
-  Shield,
-  UserPlus,
-  Building
+  Shield
 } from 'lucide-react'
 import { getOrganizations, getAllUsers } from '@/lib/supabase'
 
@@ -50,7 +47,7 @@ export default function SuperAdminDashboard() {
         setStats({
           totalOrganizations: organizations.length,
           totalUsers: users.length,
-          activeOrganizations: organizations.filter((org: any) => org.is_active).length
+          activeOrganizations: organizations.filter((org: { is_active?: boolean }) => org.is_active).length
         })
       } catch (error) {
         console.error('Error loading stats:', error)

@@ -12,8 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { 
   getOrganizations, 
-  createOrganization,
-  getAllUsers
+  createOrganization
 } from '@/lib/supabase'
 import { 
   Building2, 
