@@ -120,7 +120,9 @@ export default function OrganizationRequiredPage() {
         setMessage('')
         setAdminEmail('')
       } else {
-        alert('Fehler beim Senden der Anfrage: ' + (result.error?.message || 'Unbekannter Fehler'))
+        alert('Fehler beim Senden der Anfrage: ' + (
+          typeof result.error === 'string' ? result.error : result.error?.message || 'Unbekannter Fehler'
+        ))
       }
     } catch (error) {
       console.error('Error creating join request:', error)

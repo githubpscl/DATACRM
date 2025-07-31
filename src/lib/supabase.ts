@@ -113,8 +113,7 @@ export const getOrganizationJoinRequests = async (organizationId: string) => {
   const { data, error } = await supabase
     .from('organization_join_requests')
     .select(`
-      *,
-      user:auth.users(email)
+      *
     `)
     .eq('organization_id', organizationId)
     .order('requested_at', { ascending: false })
@@ -168,23 +167,6 @@ export const rejectJoinRequest = async (requestId: string) => {
     })
     .eq('id', requestId)
     .select()
-    .single()
-  
-  return { data, error }
-}
-
-// Database helpers - Organizations
-export const getCurrentUserOrganization = async () => {
-  const user = await getCurrentUser()
-  if (!user) return null
-
-  const { data, error } = await supabase
-    .from('users')
-    .select(`
-      *,
-      organization:organizations (*)
-    `)
-    .eq('id', user.id)
     .single()
   
   return { data, error }
@@ -304,7 +286,7 @@ export const addCustomersBulk = async (customers: {
 
   const customersWithOrg = customers.map(customer => ({
     ...customer,
-    organization_id: userOrg.data.organization_id,
+    organization_id: userOrg.data!.organization_id,
     customer_status: 'lead' as const,
     priority: 'normal' as const,
     is_active: true,

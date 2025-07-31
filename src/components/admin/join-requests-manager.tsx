@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -46,11 +46,7 @@ export default function JoinRequestsManager({
   const [loading, setLoading] = useState(true)
   const [processingId, setProcessingId] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadJoinRequests()
-  }, [organizationId])
-
-  const loadJoinRequests = async () => {
+  const loadJoinRequests = useCallback(async () => {
     try {
       const result = await getOrganizationJoinRequests(organizationId)
       if (result.data) {
@@ -61,7 +57,11 @@ export default function JoinRequestsManager({
     } finally {
       setLoading(false)
     }
-  }
+  }, [organizationId])
+
+  useEffect(() => {
+    loadJoinRequests()
+  }, [loadJoinRequests])
 
   const handleApprove = async (requestId: string) => {
     setProcessingId(requestId)
