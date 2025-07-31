@@ -12,10 +12,8 @@ import {
   isSuperAdmin,
   getOrganizations,
   getOrgUsers,
-  getAllUsers,
   getUnassignedUsers,
   updateUserProfile,
-  addAdminToOrg,
   removeRole,
   assignRole
 } from '@/lib/supabase'
@@ -32,14 +30,12 @@ import {
   CheckCircle,
   Loader2,
   Edit,
-  Trash2,
   Settings,
   ChevronDown,
   ChevronRight,
   Mail,
   Calendar,
-  Eye,
-  EyeOff
+  Eye
 } from 'lucide-react'
 
 interface User {
@@ -114,7 +110,17 @@ export default function UsersManagementPage() {
           for (const org of orgsData || []) {
             const { data: usersData, error: usersError } = await getOrgUsers(org.id)
             if (!usersError && usersData) {
-              const transformedUsers = usersData.map((item: any) => ({
+              const transformedUsers = usersData.map((item: {
+                id: string
+                user?: { 
+                  id: string
+                  email: string
+                  name?: string
+                  last_sign_in_at?: string
+                }
+                role?: string
+                created_at: string
+              }) => ({
                 id: item.user?.id || item.id,
                 email: item.user?.email || 'unknown@example.com',
                 name: item.user?.name || item.user?.email?.split('@')[0],
@@ -163,7 +169,14 @@ export default function UsersManagementPage() {
           ])
         } else {
           // Transform unassigned users data
-          const transformedUnassigned = (unassignedData || []).map((user: any) => ({
+          const transformedUnassigned = (unassignedData || []).map((user: {
+            id: string
+            email: string
+            name?: string
+            created_at: string
+            last_sign_in_at?: string
+            email_confirmed?: boolean
+          }) => ({
             id: user.id,
             email: user.email,
             name: user.name || user.email?.split('@')[0],
@@ -237,7 +250,7 @@ export default function UsersManagementPage() {
           name: editingUser.name
         })
         if (profileError) {
-          throw new Error((profileError as any)?.message || 'Fehler beim Aktualisieren des Profils')
+          throw new Error((profileError as { message?: string })?.message || 'Fehler beim Aktualisieren des Profils')
         }
       }
 
@@ -256,7 +269,7 @@ export default function UsersManagementPage() {
             editingUser.organizationId
           )
           if (roleError) {
-            throw new Error((roleError as any)?.message || 'Fehler beim Zuweisen der Rolle')
+            throw new Error((roleError as { message?: string })?.message || 'Fehler beim Zuweisen der Rolle')
           }
         }
       } else if (editingUser.role !== selectedUser.role && selectedUser.organization?.id) {
@@ -267,7 +280,7 @@ export default function UsersManagementPage() {
           selectedUser.organization.id
         )
         if (roleError) {
-          throw new Error((roleError as any)?.message || 'Fehler beim Aktualisieren der Rolle')
+          throw new Error((roleError as { message?: string })?.message || 'Fehler beim Aktualisieren der Rolle')
         }
       }
       
@@ -276,9 +289,10 @@ export default function UsersManagementPage() {
       
       // Refresh data would trigger here in a real implementation
       // For now, we just close the modal
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving user:', error)
-      alert(`Fehler beim Speichern: ${error.message || 'Unbekannter Fehler'}`)
+      const errorMessage = (error as { message?: string })?.message || 'Unbekannter Fehler'
+      alert(`Fehler beim Speichern: ${errorMessage}`)
     } finally {
       setSavingUser(false)
     }
@@ -292,7 +306,7 @@ export default function UsersManagementPage() {
     try {
       const { error } = await removeRole(userId, orgId)
       if (error) {
-        alert(`Fehler beim Entfernen des Benutzers: ${(error as any)?.message || 'Unbekannter Fehler'}`)
+        alert(`Fehler beim Entfernen des Benutzers: ${(error as { message?: string })?.message || 'Unbekannter Fehler'}`)
       } else {
         alert('✅ Benutzer erfolgreich entfernt!')
         // Refresh data would go here
