@@ -301,21 +301,81 @@ export const createOrganization = async (org: {
       is_active: true
     }
     
-    console.log('Inserting data:', insertData)
+    console.log('Inserting organization data:', insertData)
     
-    const { data, error } = await supabase
+    const { data: orgData, error: orgError } = await supabase
       .from('organizations')
       .insert([insertData])
       .select()
+      .single()
     
-    console.log('Insert result:', { data, error })
-    
-    if (error) {
-      console.error('Insert error:', error)
-      return { data: null, error }
+    if (orgError) {
+      console.error('Organization insert error:', orgError)
+      return { data: null, error: orgError }
     }
     
-    return { data, error: null }
+    console.log('Organization created successfully:', orgData)
+    
+    // If admin_email is provided, try to assign admin role
+    if (org.admin_email) {
+      console.log('Attempting to assign admin role to:', org.admin_email)
+      
+      // First, find the user with this email
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('id, email, role')
+        .eq('email', org.admin_email)
+        .single()
+      
+      if (userError || !userData) {
+        console.error('User not found:', userError)
+        // Delete the organization since admin assignment failed
+        await supabase
+          .from('organizations')
+          .delete()
+          .eq('id', orgData.id)
+        
+        return { 
+          data: null, 
+          error: { 
+            message: `Admin-Benutzer mit E-Mail "${org.admin_email}" wurde nicht in der Datenbank gefunden. Bitte stellen Sie sicher, dass sich der Benutzer zuerst registriert hat.`,
+            code: 'USER_NOT_FOUND'
+          } 
+        }
+      }
+      
+      console.log('Found admin user:', userData)
+      
+      // Update user's organization_id and role to org_admin
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ 
+          organization_id: orgData.id,
+          role: 'org_admin'
+        })
+        .eq('id', userData.id)
+      
+      if (updateError) {
+        console.error('Error updating user role:', updateError)
+        // Delete the organization since admin assignment failed
+        await supabase
+          .from('organizations')
+          .delete()
+          .eq('id', orgData.id)
+        
+        return { 
+          data: null, 
+          error: { 
+            message: `Fehler beim Zuweisen der Admin-Rolle: ${updateError.message}`,
+            details: updateError
+          } 
+        }
+      }
+      
+      console.log('Admin role assigned successfully')
+    }
+    
+    return { data: orgData, error: null }
   } catch (err) {
     console.error('Unexpected error in createOrganization:', err)
     return { 

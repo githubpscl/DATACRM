@@ -123,9 +123,19 @@ export default function SuperAdminPage() {
 
       if (result.error) {
         console.error('Error creating organization:', result.error)
-        alert(`Fehler beim Erstellen der Organisation: ${result.error.message || 'Unbekannter Fehler'}`)
+        
+        // Check for specific error types
+        if (result.error.code === 'USER_NOT_FOUND') {
+          alert(`❌ ${result.error.message}`)
+        } else {
+          alert(`❌ Fehler beim Erstellen der Organisation: ${result.error.message || 'Unbekannter Fehler'}`)
+        }
       } else {
-        alert(`✅ Organisation "${formData.name}" erfolgreich erstellt!`)
+        const successMessage = formData.admin_email 
+          ? `✅ Organisation "${formData.name}" erfolgreich erstellt und "${formData.admin_email}" als Administrator zugewiesen!`
+          : `✅ Organisation "${formData.name}" erfolgreich erstellt!`
+        
+        alert(successMessage)
         setFormData({ 
           name: '', 
           description: '', 
@@ -217,7 +227,7 @@ export default function SuperAdminPage() {
                 Neue Organisation erstellen
               </CardTitle>
               <CardDescription>
-                Erstellen Sie eine neue Organisation mit einem Administrator
+                Erstellen Sie eine neue Organisation. Falls Sie eine Admin-E-Mail angeben, wird der entsprechende Benutzer automatisch als Administrator zugewiesen (der Benutzer muss bereits registriert sein).
               </CardDescription>
             </CardHeader>
             <CardContent>
