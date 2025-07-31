@@ -377,3 +377,72 @@ export const removeRole = async (userId: string, organizationId: string) => {
     return { data: null, error }
   }
 }
+
+// Update organization details
+export const updateOrganization = async (orgId: string, updates: { name?: string, domain?: string }) => {
+  try {
+    const { data, error } = await supabase
+      .from('organizations')
+      .update(updates)
+      .eq('id', orgId)
+      .select()
+    
+    if (error) {
+      console.error('Error updating organization:', error)
+      return { data: null, error }
+    }
+    
+    return { data, error: null }
+  } catch (error) {
+    console.error('Error in updateOrganization:', error)
+    return { data: null, error }
+  }
+}
+
+// Add user to organization as admin
+export const addAdminToOrg = async (userEmail: string, orgId: string) => {
+  try {
+    // First, check if user exists in profiles
+    const { data: userProfile, error: userError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', userEmail)
+      .single()
+    
+    if (userError || !userProfile) {
+      return { data: null, error: { message: 'Benutzer nicht gefunden' } }
+    }
+    
+    // Check if user is already in this organization
+    const { data: existingRole, error: roleCheckError } = await supabase
+      .from('user_roles')
+      .select('id')
+      .eq('user_id', userProfile.id)
+      .eq('organization_id', orgId)
+      .single()
+    
+    if (existingRole) {
+      return { data: null, error: { message: 'Benutzer ist bereits Mitglied dieser Organisation' } }
+    }
+    
+    // Add user as admin to organization
+    const { data, error } = await supabase
+      .from('user_roles')
+      .insert({
+        user_id: userProfile.id,
+        organization_id: orgId,
+        role: 'org_admin'
+      })
+      .select()
+    
+    if (error) {
+      console.error('Error adding admin to organization:', error)
+      return { data: null, error }
+    }
+    
+    return { data, error: null }
+  } catch (error) {
+    console.error('Error in addAdminToOrg:', error)
+    return { data: null, error }
+  }
+}

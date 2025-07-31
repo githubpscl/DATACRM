@@ -6,6 +6,9 @@ Testdaten aus Dashboard entfernen
 Rollen hinzufügen (Ich der orgs hinzufügen kann mit jeweiligen admins; Admins von orgs, die neue nutzer der Org hinzufügen können und wichtige sachen wie alle daten löschen oder sowas machen können, auch rechte an andere vergeben, soll so sein dass jeder die rechte die er hat an andere weitergeben kann, Admin soll logischerweise alle rechte in der org haben) 
 Sinnvolle Liste mit rechten hinzufügen
 
+Die administrationsseite kann ich aktuell gar nicht mehr aufrufen, obwohl ich mit einem super admin user angemeldet bin. Ändere es so, dass dieser ganze administrationspart in den einstellungen drin ist. als super admin user soll man dann orgs erstellen und admins hinzufügen können sowie einen überblick über alle verhandenen orgs haben und diese bearbeiten können. Als normaler nutzer soll man dann die rechte die man selbst hat anderen nutzern innerhalb seiner org übertragen können
+
+
 
 
 
