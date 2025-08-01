@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
   trailingSlash: true,
   images: {
     unoptimized: true
@@ -14,23 +13,6 @@ const nextConfig = {
   },
   // Exclude backend directory
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
-  webpack: (config, { isServer }) => {
-    // Ignore backend files during webpack compilation
-    config.module.rules.push({
-      test: /backend\/.*\.(ts|tsx|js|jsx)$/,
-      loader: 'ignore-loader'
-    });
-    
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-      };
-    }
-    return config;
-  },
 };
 
 module.exports = nextConfig;

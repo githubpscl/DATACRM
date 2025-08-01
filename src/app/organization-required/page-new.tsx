@@ -118,7 +118,7 @@ export default function OrganizationRequiredPage() {
     try {
       const result = await createJoinRequest({
         organization_id: selectedOrg.id,
-        admin_email: '',  // TODO: Get admin email from organization
+        admin_email: user?.email || '',
         message: message.trim() || undefined
       })
 
@@ -159,11 +159,11 @@ export default function OrganizationRequiredPage() {
       const emailContent = `
 Von: ${user?.email}
 An: ${contactForm.adminEmail}
-Betreff: Bitte um Aufnahme in Organisation &quot;${contactForm.organizationName}&quot;
+Betreff: Bitte um Aufnahme in Organisation "${contactForm.organizationName}"
 
 Hallo,
 
-ich würde gerne der Organisation &quot;${contactForm.organizationName}&quot; beitreten.
+ich würde gerne der Organisation "${contactForm.organizationName}" beitreten.
 
 ${contactForm.message}
 

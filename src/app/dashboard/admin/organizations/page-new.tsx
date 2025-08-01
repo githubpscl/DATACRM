@@ -55,8 +55,6 @@ export default function OrganizationsPage() {
   const [showUserManagement, setShowUserManagement] = useState(false)
   const [loadingUsers, setLoadingUsers] = useState(false)
   const [addingUser, setAddingUser] = useState(false)
-  const [showAddUser, setShowAddUser] = useState(false)
-  const [showAddAdmin, setShowAddAdmin] = useState(false)
 
   // Form states
   const [createFormData, setCreateFormData] = useState({
@@ -182,7 +180,6 @@ export default function OrganizationsPage() {
 
       if (result.data) {
         alert('Benutzer erfolgreich hinzugefügt!')
-        setShowAddUser(false)
         setUserFormData({
           email: '',
           first_name: '',
@@ -223,7 +220,6 @@ export default function OrganizationsPage() {
 
       if (result.data) {
         alert('Administrator erfolgreich hinzugefügt!')
-        setShowAddAdmin(false)
         setAdminFormData({
           email: '',
           first_name: '',
@@ -390,7 +386,7 @@ export default function OrganizationsPage() {
                         onClick={() => handleManageUsers(org)}
                       >
                         <Eye className="h-4 w-4 mr-1" />
-                        Benutzer verwalten
+                        Anzeigen
                       </Button>
                       <Button 
                         variant="outline" 
@@ -398,23 +394,20 @@ export default function OrganizationsPage() {
                         disabled
                       >
                         <Settings className="h-4 w-4 mr-1" />
-                        Rechte verwalten
+                        Verwalten
                       </Button>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-2">
-                      <Dialog open={showAddUser && selectedOrg?.id === org.id} onOpenChange={setShowAddUser}>
+                      <Dialog>
                         <DialogTrigger asChild>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => {
-                              setSelectedOrg(org)
-                              setShowAddUser(true)
-                            }}
+                            onClick={() => setSelectedOrg(org)}
                           >
                             <UserPlus className="h-4 w-4 mr-1" />
-                            Benutzer hinzufügen
+                            Benutzer
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
@@ -482,18 +475,15 @@ export default function OrganizationsPage() {
                         </DialogContent>
                       </Dialog>
 
-                      <Dialog open={showAddAdmin && selectedOrg?.id === org.id} onOpenChange={setShowAddAdmin}>
+                      <Dialog>
                         <DialogTrigger asChild>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => {
-                              setSelectedOrg(org)
-                              setShowAddAdmin(true)
-                            }}
+                            onClick={() => setSelectedOrg(org)}
                           >
                             <Shield className="h-4 w-4 mr-1" />
-                            Admin hinzufügen
+                            Admin
                           </Button>
                         </DialogTrigger>
                         <DialogContent>

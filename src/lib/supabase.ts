@@ -28,6 +28,24 @@ export interface Organization {
   logo_url?: string
   subscription_plan?: string
   is_active: boolean
+  created_at?: string
+}
+
+// Type for organization with user count (used in admin dashboard)
+export interface OrganizationWithUserCount extends Organization {
+  user_count: number
+}
+
+// Types for user data
+export interface User {
+  id: string
+  email: string
+  first_name: string
+  last_name: string
+  role: string
+  is_active: boolean
+  created_at: string
+  organization_id: string
 }
 
 // Auth helpers
@@ -1085,4 +1103,158 @@ export const getAnalyticsData = async () => {
     console.error('Error in getAnalyticsData:', error)
     return { data: null, error }
   }
+}
+
+// Organization Management Functions for Super Admin
+export const getOrganizationUserCount = async (organizationId: string): Promise<{ data: number | null, error: unknown }> => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id', { count: 'exact' })
+      .eq('organization_id', organizationId)
+      .eq('is_active', true)
+
+    if (error) {
+      console.error('Error getting user count:', error)
+      return { data: null, error }
+    }
+
+    return { data: data?.length || 0, error: null }
+  } catch (error) {
+    console.error('Error in getOrganizationUserCount:', error)
+    return { data: null, error }
+  }
+}
+
+export const getAllOrganizationsWithUserCounts = async (): Promise<{ data: OrganizationWithUserCount[] | null, error: unknown }> => {
+  try {
+    // Get all organizations
+    const { data: organizations, error: orgError } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('is_active', true)
+      .order('name')
+
+    if (orgError) {
+      console.error('Error getting organizations:', orgError)
+      return { data: null, error: orgError }
+    }
+
+    if (!organizations) {
+      return { data: [], error: null }
+    }
+
+    // Get user counts for each organization
+    const organizationsWithCounts = await Promise.all(
+      organizations.map(async (org) => {
+        const { data: userCount } = await getOrganizationUserCount(org.id)
+        return {
+          ...org,
+          user_count: userCount || 0
+        }
+      })
+    )
+
+    return { data: organizationsWithCounts, error: null }
+  } catch (error) {
+    console.error('Error in getAllOrganizationsWithUserCounts:', error)
+    return { data: null, error }
+  }
+}
+
+export const getOrganizationUsers = async (organizationId: string): Promise<{ data: User[] | null, error: unknown }> => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select(`
+        id,
+        email,
+        first_name,
+        last_name,
+        role,
+        is_active,
+        created_at,
+        organization_id
+      `)
+      .eq('organization_id', organizationId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error getting organization users:', error)
+      return { data: null, error }
+    }
+
+    return { data: data || [], error: null }
+  } catch (error) {
+    console.error('Error in getOrganizationUsers:', error)
+    return { data: null, error }
+  }
+}
+
+export const addUserToOrganization = async (userData: {
+  email: string
+  first_name: string
+  last_name: string
+  organization_id: string
+  role?: string
+  temporary_password?: string
+}): Promise<{ data: User | null, error: unknown }> => {
+  try {
+    // Create auth user first
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: userData.email,
+      password: userData.temporary_password || 'TempPass123!',
+      email_confirm: true
+    })
+
+    if (authError) {
+      console.error('Error creating auth user:', authError)
+      return { data: null, error: authError }
+    }
+
+    if (!authData.user) {
+      return { data: null, error: 'Failed to create user' }
+    }
+
+    // Create user profile
+    const { data: profileData, error: profileError } = await supabase
+      .from('users')
+      .insert([{
+        id: authData.user.id,
+        email: userData.email,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        organization_id: userData.organization_id,
+        role: userData.role || 'user',
+        is_active: true
+      }])
+      .select()
+      .single()
+
+    if (profileError) {
+      console.error('Error creating user profile:', profileError)
+      // Try to delete the auth user if profile creation failed
+      await supabase.auth.admin.deleteUser(authData.user.id)
+      return { data: null, error: profileError }
+    }
+
+    return { data: profileData, error: null }
+  } catch (error) {
+    console.error('Error in addUserToOrganization:', error)
+    return { data: null, error }
+  }
+}
+
+export const addAdminToOrganization = async (userData: {
+  email: string
+  first_name: string
+  last_name: string
+  organization_id: string
+  temporary_password?: string
+}): Promise<{ data: User | null, error: unknown }> => {
+  return addUserToOrganization({
+    ...userData,
+    role: 'org_admin'
+  })
 }
