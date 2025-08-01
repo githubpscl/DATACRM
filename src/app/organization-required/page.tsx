@@ -19,7 +19,6 @@ import {
   Clock,
   ExternalLink,
   Mail,
-  Users,
   Shield,
   ArrowLeft
 } from 'lucide-react'
@@ -265,7 +264,7 @@ ${user?.firstName} ${user?.lastName}
                       </div>
                       {request.message && (
                         <div className="text-sm text-gray-500 mt-1">
-                          Nachricht: "{request.message}"
+                          Nachricht: &quot;{request.message}&quot;
                         </div>
                       )}
                     </div>
@@ -338,7 +337,7 @@ ${user?.firstName} ${user?.lastName}
                   {selectedOrg && (
                     <div className="space-y-4 pt-4 border-t">
                       <h3 className="font-medium text-gray-900">
-                        Beitrittsanfrage für "{selectedOrg.name}"
+                        Beitrittsanfrage für &quot;{selectedOrg.name}&quot;
                       </h3>
                       
                       <div>

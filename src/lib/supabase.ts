@@ -1145,7 +1145,7 @@ export const getAllOrganizationsWithUserCounts = async (): Promise<{ data: Array
   }
 }
 
-export const getOrganizationUsers = async (organizationId: string): Promise<{ data: any[] | null, error: unknown }> => {
+export const getOrganizationUsers = async (organizationId: string): Promise<{ data: Record<string, unknown>[] | null, error: unknown }> => {
   try {
     const { data, error } = await supabase
       .from('users')
@@ -1182,7 +1182,7 @@ export const addUserToOrganization = async (userData: {
   organization_id: string
   role?: string
   temporary_password?: string
-}): Promise<{ data: any | null, error: unknown }> => {
+}): Promise<{ data: Record<string, unknown> | null, error: unknown }> => {
   try {
     // Create auth user first
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -1235,7 +1235,7 @@ export const addAdminToOrganization = async (userData: {
   last_name: string
   organization_id: string
   temporary_password?: string
-}): Promise<{ data: any | null, error: unknown }> => {
+}): Promise<{ data: Record<string, unknown> | null, error: unknown }> => {
   return addUserToOrganization({
     ...userData,
     role: 'org_admin'

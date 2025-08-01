@@ -65,8 +65,6 @@ export default function OrganizationsPage() {
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null)
   const [orgUsers, setOrgUsers] = useState<OrganizationUser[]>([])
   const [showUserManagement, setShowUserManagement] = useState(false)
-  const [showAddUser, setShowAddUser] = useState(false)
-  const [showAddAdmin, setShowAddAdmin] = useState(false)
   const [loadingUsers, setLoadingUsers] = useState(false)
   const [addingUser, setAddingUser] = useState(false)
 
@@ -122,7 +120,7 @@ export default function OrganizationsPage() {
     try {
       const result = await getOrganizationUsers(orgId)
       if (result.data) {
-        setOrgUsers(result.data)
+        setOrgUsers(result.data as unknown as OrganizationUser[])
       }
     } catch (error) {
       console.error('Error loading organization users:', error)
@@ -194,7 +192,6 @@ export default function OrganizationsPage() {
 
       if (result.data) {
         alert('Benutzer erfolgreich hinzugefügt!')
-        setShowAddUser(false)
         setUserFormData({
           email: '',
           first_name: '',
@@ -235,7 +232,6 @@ export default function OrganizationsPage() {
 
       if (result.data) {
         alert('Administrator erfolgreich hinzugefügt!')
-        setShowAddAdmin(false)
         setAdminFormData({
           email: '',
           first_name: '',
@@ -430,7 +426,7 @@ export default function OrganizationsPage() {
                           <DialogHeader>
                             <DialogTitle>Benutzer hinzufügen</DialogTitle>
                             <DialogDescription>
-                              Neuen Benutzer zu "{org.name}" hinzufügen
+                              Neuen Benutzer zu &quot;{org.name}&quot; hinzufügen
                             </DialogDescription>
                           </DialogHeader>
                           <form onSubmit={handleAddUser} className="space-y-4">
@@ -506,7 +502,7 @@ export default function OrganizationsPage() {
                           <DialogHeader>
                             <DialogTitle>Administrator hinzufügen</DialogTitle>
                             <DialogDescription>
-                              Neuen Administrator zu "{org.name}" hinzufügen
+                              Neuen Administrator zu &quot;{org.name}&quot; hinzufügen
                             </DialogDescription>
                           </DialogHeader>
                           <form onSubmit={handleAddAdmin} className="space-y-4">
