@@ -1,18 +1,22 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  trailingSlash: true,
   images: {
     unoptimized: true
   },
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
-  // Exclude backend files from TypeScript compilation
   typescript: {
     ignoreBuildErrors: false,
   },
-  // Exclude backend directory
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
+  // Only export for production
+  ...(process.env.NODE_ENV === 'production' && process.env.GITHUB_PAGES === 'true' && {
+    output: 'export',
+    trailingSlash: true,
+    basePath: '/DATACRM',
+    assetPrefix: '/DATACRM/',
+  }),
 };
 
 module.exports = nextConfig;

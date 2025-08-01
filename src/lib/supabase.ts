@@ -5,15 +5,17 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // Dynamically determine the correct redirect URL
 const getRedirectUrl = () => {
-  if (typeof window === 'undefined') return 'https://githubpscl.github.io/DATACRM'
-  
-  // For local development
-  if (window.location.hostname === 'localhost') {
-    return 'http://localhost:3000'
+  if (typeof window === 'undefined') {
+    // Server-side: determine based on environment
+    return process.env.NODE_ENV === 'production' 
+      ? 'https://githubpscl.github.io/DATACRM'
+      : 'http://localhost:3000'
   }
   
-  // For production (GitHub Pages)
-  return 'https://githubpscl.github.io/DATACRM'
+  // Client-side: use current origin with correct base path
+  const origin = window.location.origin
+  const basePath = process.env.NODE_ENV === 'production' ? '/DATACRM' : ''
+  return `${origin}${basePath}`
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
