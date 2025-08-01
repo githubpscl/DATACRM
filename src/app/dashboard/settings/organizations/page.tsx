@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label'
 import { 
   createOrganization, 
   getOrganizations, 
-  isSuperAdmin,
   getOrgUsers,
   addAdminToOrg,
   updateOrganization
@@ -83,8 +82,8 @@ export default function OrganizationsPage() {
       }
 
       try {
-        // Check super admin status
-        const superAdminStatus = await isSuperAdmin(user.email)
+        // Check super admin status from user object
+        const superAdminStatus = user.role === 'super_admin'
         setIsSuper(superAdminStatus)
 
         // Load organizations based on role

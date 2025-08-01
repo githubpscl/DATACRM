@@ -193,12 +193,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Fallback to Supabase session check
           const { data: { session } } = await supabase.auth.getSession()
           if (session?.user) {
+            // Load user's organization on initialization
+            const { getCurrentUserOrganization, isSuperAdmin } = await import('@/lib/supabase')
+            
+            const isSuper = await isSuperAdmin(session.user.email || '')
+            let organization = null
+            
+            if (!isSuper) {
+              const { data: orgData } = await getCurrentUserOrganization()
+              organization = orgData
+            }
+
             const userData: User = {
               id: session.user.id,
               email: session.user.email || '',
               firstName: session.user.user_metadata?.firstName || 'Demo',
               lastName: session.user.user_metadata?.lastName || 'User',
-              role: 'admin'
+              role: isSuper ? 'super_admin' : 'admin',
+              organizationId: organization?.id,
+              organization: organization ? {
+                id: organization.id,
+                name: organization.name,
+                subscription_plan: organization.subscription_plan
+              } : undefined
             }
             setUser(userData)
             setToken(session.access_token)
@@ -218,12 +235,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
+          // Load user's organization on auth state change
+          const { getCurrentUserOrganization, isSuperAdmin } = await import('@/lib/supabase')
+          
+          const isSuper = await isSuperAdmin(session.user.email || '')
+          let organization = null
+          
+          if (!isSuper) {
+            const { data: orgData } = await getCurrentUserOrganization()
+            organization = orgData
+          }
+
           const userData: User = {
             id: session.user.id,
             email: session.user.email || '',
             firstName: session.user.user_metadata?.firstName || 'Demo',
             lastName: session.user.user_metadata?.lastName || 'User',
-            role: 'admin'
+            role: isSuper ? 'super_admin' : 'admin',
+            organizationId: organization?.id,
+            organization: organization ? {
+              id: organization.id,
+              name: organization.name,
+              subscription_plan: organization.subscription_plan
+            } : undefined
           }
           setUser(userData)
           setToken(session.access_token)
@@ -275,7 +309,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true)
       
-      // For demo purposes, allow demo@example.com and super admin with any password
+      // Test user without organization - should redirect to organization-required
+      if (email === 'noorg@example.com') {
+        const mockUser: User = {
+          id: 'no-org-user-id',
+          email: 'noorg@example.com',
+          firstName: 'No',
+          lastName: 'Organization',
+          role: 'user'
+          // No organization assigned
+        }
+        setUser(mockUser)
+        setToken('no-org-token')
+        saveSession(mockUser, 'no-org-token')
+        router.push('/organization-required')
+        return
+      }
+      
+      // For demo purposes, allow demo@example.com with organization
       if (email === 'demo@example.com') {
         const mockUser: User = {
           id: 'demo-user-id',
@@ -322,19 +373,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error
 
       if (data.user) {
+        // Load user's organization after successful login
+        const { getCurrentUserOrganization, isSuperAdmin } = await import('@/lib/supabase')
+        
+        const isSuper = await isSuperAdmin(data.user.email || '')
+        let organization = null
+        
+        if (!isSuper) {
+          const { data: orgData } = await getCurrentUserOrganization()
+          organization = orgData
+        }
+
         const userData: User = {
           id: data.user.id,
           email: data.user.email || '',
           firstName: data.user.user_metadata?.firstName || 'User',
           lastName: data.user.user_metadata?.lastName || '',
-          role: 'user'
+          role: isSuper ? 'super_admin' : 'user',
+          organizationId: organization?.id,
+          organization: organization ? {
+            id: organization.id,
+            name: organization.name,
+            subscription_plan: organization.subscription_plan
+          } : undefined
         }
+        
         setUser(userData)
         setToken(data.session?.access_token || null)
         if (data.session?.access_token) {
           saveSession(userData, data.session.access_token)
         }
-        router.push('/dashboard')
+        
+        // Check if user has organization (except super admin)
+        if (!isSuper && !organization) {
+          router.push('/organization-required')
+        } else {
+          router.push('/dashboard')
+        }
       }
     } catch (error: unknown) {
       console.error('Login error:', error)

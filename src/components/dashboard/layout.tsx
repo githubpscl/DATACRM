@@ -6,7 +6,6 @@ import UserDropdown from '@/components/ui/user-dropdown'
 import SessionStatus from '@/components/ui/session-status'
 import OrgNavigation from '@/components/navigation/org-navigation'
 import { useAuth } from '@/components/auth-provider'
-import { isSuperAdmin, getUserRole } from '@/lib/supabase'
 import { 
   Upload,
   Users,
@@ -169,13 +168,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       }
 
       try {
-        const isSuperAdminUser = await isSuperAdmin(user.email)
+        // Get super admin status from user object (already loaded in AuthProvider)
+        const isSuperAdminUser = user.role === 'super_admin'
         setIsSuper(isSuperAdminUser)
-
-        const roleResponse = await getUserRole(user.id)
-        if (roleResponse.data) {
-          setUserRole(roleResponse.data.role)
-        }
+        setUserRole(user.role)
       } catch (error) {
         console.error('Error checking permissions:', error)
       }
@@ -198,6 +194,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // Show nothing while redirecting to login
   if (!user) {
+    return null
+  }
+
+  // Redirect to organization-required if user has no organization (except super admin)
+  if (user.role !== 'super_admin' && !user.organization?.id) {
+    router.push('/organization-required')
     return null
   }
 
