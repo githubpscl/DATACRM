@@ -438,5 +438,99 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Funktion um verfügbare Organisationen für Join-Requests zu laden (für die Navigation)
+CREATE OR REPLACE FUNCTION get_available_organizations_for_join()
+RETURNS TABLE (
+    id UUID,
+    name TEXT,
+    description TEXT,
+    industry TEXT,
+    website TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        o.id,
+        o.name,
+        o.description,
+        o.industry,
+        o.website
+    FROM organizations o
+    WHERE o.is_active = true
+    AND o.id NOT IN (
+        -- Bereits Mitglied
+        SELECT organization_id 
+        FROM users 
+        WHERE id = auth.uid() 
+        AND organization_id IS NOT NULL
+        UNION
+        -- Bereits beantragt
+        SELECT organization_id 
+        FROM organization_join_requests 
+        WHERE user_id = auth.uid() 
+        AND status = 'pending'
+    )
+    ORDER BY o.name;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Funktion um Join-Requests des aktuellen Benutzers zu holen
+CREATE OR REPLACE FUNCTION get_user_join_requests()
+RETURNS TABLE (
+    id UUID,
+    organization_id UUID,
+    status TEXT,
+    message TEXT,
+    requested_at TIMESTAMP WITH TIME ZONE,
+    organization_name TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        r.id,
+        r.organization_id,
+        r.status,
+        r.message,
+        r.requested_at,
+        o.name as organization_name
+    FROM organization_join_requests r
+    LEFT JOIN organizations o ON o.id = r.organization_id
+    WHERE r.user_id = auth.uid()
+    ORDER BY r.requested_at DESC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Funktion um Join-Request zu erstellen
+CREATE OR REPLACE FUNCTION create_join_request(
+    org_id UUID,
+    req_message TEXT DEFAULT NULL
+)
+RETURNS UUID AS $$
+DECLARE
+    request_id UUID;
+    user_email TEXT;
+BEGIN
+    -- Get user email
+    SELECT email INTO user_email FROM auth.users WHERE id = auth.uid();
+    
+    -- Create join request
+    INSERT INTO organization_join_requests (
+        user_id,
+        organization_id,
+        requested_by_email,
+        message,
+        status
+    ) VALUES (
+        auth.uid(),
+        org_id,
+        user_email,
+        req_message,
+        'pending'
+    ) RETURNING id INTO request_id;
+    
+    RETURN request_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Test der RLS Policies
 SELECT 'Multi-Tenant Setup completed successfully!' as status;

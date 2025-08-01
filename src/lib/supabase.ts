@@ -5,17 +5,15 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // Dynamically determine the correct redirect URL
 const getRedirectUrl = () => {
-  if (typeof window === 'undefined') {
-    // Server-side: determine based on environment
-    return process.env.NODE_ENV === 'production' 
-      ? 'https://githubpscl.github.io/DATACRM'
-      : 'http://localhost:3000'
+  if (typeof window === 'undefined') return 'https://githubpscl.github.io/DATACRM'
+  
+  // For local development
+  if (window.location.hostname === 'localhost') {
+    return 'http://localhost:3000'
   }
   
-  // Client-side: use current origin with correct base path
-  const origin = window.location.origin
-  const basePath = process.env.NODE_ENV === 'production' ? '/DATACRM' : ''
-  return `${origin}${basePath}`
+  // For production (GitHub Pages)
+  return 'https://githubpscl.github.io/DATACRM'
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
@@ -30,24 +28,6 @@ export interface Organization {
   logo_url?: string
   subscription_plan?: string
   is_active: boolean
-  created_at?: string
-}
-
-// Type for organization with user count (used in admin dashboard)
-export interface OrganizationWithUserCount extends Organization {
-  user_count: number
-}
-
-// Types for user data
-export interface User {
-  id: string
-  email: string
-  first_name: string
-  last_name: string
-  role: string
-  is_active: boolean
-  created_at: string
-  organization_id: string
 }
 
 // Auth helpers
@@ -1128,7 +1108,7 @@ export const getOrganizationUserCount = async (organizationId: string): Promise<
   }
 }
 
-export const getAllOrganizationsWithUserCounts = async (): Promise<{ data: OrganizationWithUserCount[] | null, error: unknown }> => {
+export const getAllOrganizationsWithUserCounts = async (): Promise<{ data: Array<Organization & { user_count: number }> | null, error: unknown }> => {
   try {
     // Get all organizations
     const { data: organizations, error: orgError } = await supabase
@@ -1164,7 +1144,7 @@ export const getAllOrganizationsWithUserCounts = async (): Promise<{ data: Organ
   }
 }
 
-export const getOrganizationUsers = async (organizationId: string): Promise<{ data: User[] | null, error: unknown }> => {
+export const getOrganizationUsers = async (organizationId: string): Promise<{ data: any[] | null, error: unknown }> => {
   try {
     const { data, error } = await supabase
       .from('users')
@@ -1201,7 +1181,7 @@ export const addUserToOrganization = async (userData: {
   organization_id: string
   role?: string
   temporary_password?: string
-}): Promise<{ data: User | null, error: unknown }> => {
+}): Promise<{ data: any | null, error: unknown }> => {
   try {
     // Create auth user first
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -1254,7 +1234,7 @@ export const addAdminToOrganization = async (userData: {
   last_name: string
   organization_id: string
   temporary_password?: string
-}): Promise<{ data: User | null, error: unknown }> => {
+}): Promise<{ data: any | null, error: unknown }> => {
   return addUserToOrganization({
     ...userData,
     role: 'org_admin'

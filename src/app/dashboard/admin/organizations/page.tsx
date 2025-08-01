@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import DashboardLayout from '@/components/dashboard/layout'
 import SuperAdminGuard from '@/components/admin/super-admin-guard'
@@ -16,21 +17,35 @@ import {
   createOrganization,
   getOrganizationUsers,
   addUserToOrganization,
-  addAdminToOrganization,
-  OrganizationWithUserCount
+  addAdminToOrganization
 } from '@/lib/supabase'
 import { 
   Building2, 
   Plus, 
   Users, 
   Crown,
+  Mail,
   ExternalLink,
+  Phone,
   UserPlus,
   Settings,
   Shield,
   Eye,
   Loader2
 } from 'lucide-react'
+
+interface Organization {
+  id: string
+  name: string
+  description?: string
+  email?: string
+  industry?: string
+  website?: string
+  phone?: string
+  subscription_plan?: string
+  created_at: string
+  user_count: number
+}
 
 interface OrganizationUser {
   id: string
@@ -44,19 +59,20 @@ interface OrganizationUser {
 
 export default function OrganizationsPage() {
   const { user, loading: authLoading } = useAuth()
-  const [organizations, setOrganizations] = useState<OrganizationWithUserCount[]>([])
+  const router = useRouter()
+  const [organizations, setOrganizations] = useState<Organization[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [creating, setCreating] = useState(false)
 
   // User management state
-  const [selectedOrg, setSelectedOrg] = useState<OrganizationWithUserCount | null>(null)
+  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null)
   const [orgUsers, setOrgUsers] = useState<OrganizationUser[]>([])
   const [showUserManagement, setShowUserManagement] = useState(false)
-  const [loadingUsers, setLoadingUsers] = useState(false)
-  const [addingUser, setAddingUser] = useState(false)
   const [showAddUser, setShowAddUser] = useState(false)
   const [showAddAdmin, setShowAddAdmin] = useState(false)
+  const [loadingUsers, setLoadingUsers] = useState(false)
+  const [addingUser, setAddingUser] = useState(false)
 
   // Form states
   const [createFormData, setCreateFormData] = useState({
@@ -244,7 +260,7 @@ export default function OrganizationsPage() {
     }
   }
 
-  const handleManageUsers = (org: OrganizationWithUserCount) => {
+  const handleManageUsers = (org: Organization) => {
     setSelectedOrg(org)
     setShowUserManagement(true)
     loadOrganizationUsers(org.id)
@@ -377,7 +393,7 @@ export default function OrganizationsPage() {
                     )}
                     
                     <div className="text-sm text-gray-500">
-                      Erstellt: {org.created_at ? new Date(org.created_at).toLocaleDateString('de-DE') : 'Unbekannt'}
+                      Erstellt: {new Date(org.created_at).toLocaleDateString('de-DE')}
                     </div>
                   </div>
                   
@@ -390,7 +406,7 @@ export default function OrganizationsPage() {
                         onClick={() => handleManageUsers(org)}
                       >
                         <Eye className="h-4 w-4 mr-1" />
-                        Benutzer verwalten
+                        Anzeigen
                       </Button>
                       <Button 
                         variant="outline" 
@@ -398,30 +414,27 @@ export default function OrganizationsPage() {
                         disabled
                       >
                         <Settings className="h-4 w-4 mr-1" />
-                        Rechte verwalten
+                        Verwalten
                       </Button>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-2">
-                      <Dialog open={showAddUser && selectedOrg?.id === org.id} onOpenChange={setShowAddUser}>
+                      <Dialog>
                         <DialogTrigger asChild>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => {
-                              setSelectedOrg(org)
-                              setShowAddUser(true)
-                            }}
+                            onClick={() => setSelectedOrg(org)}
                           >
                             <UserPlus className="h-4 w-4 mr-1" />
-                            Benutzer hinzufügen
+                            Benutzer
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
                             <DialogTitle>Benutzer hinzufügen</DialogTitle>
                             <DialogDescription>
-                              Neuen Benutzer zu &quot;{org.name}&quot; hinzufügen
+                              Neuen Benutzer zu "{org.name}" hinzufügen
                             </DialogDescription>
                           </DialogHeader>
                           <form onSubmit={handleAddUser} className="space-y-4">
@@ -482,25 +495,22 @@ export default function OrganizationsPage() {
                         </DialogContent>
                       </Dialog>
 
-                      <Dialog open={showAddAdmin && selectedOrg?.id === org.id} onOpenChange={setShowAddAdmin}>
+                      <Dialog>
                         <DialogTrigger asChild>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => {
-                              setSelectedOrg(org)
-                              setShowAddAdmin(true)
-                            }}
+                            onClick={() => setSelectedOrg(org)}
                           >
                             <Shield className="h-4 w-4 mr-1" />
-                            Admin hinzufügen
+                            Admin
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
                             <DialogTitle>Administrator hinzufügen</DialogTitle>
                             <DialogDescription>
-                              Neuen Administrator zu &quot;{org.name}&quot; hinzufügen
+                              Neuen Administrator zu "{org.name}" hinzufügen
                             </DialogDescription>
                           </DialogHeader>
                           <form onSubmit={handleAddAdmin} className="space-y-4">
