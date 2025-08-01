@@ -1108,7 +1108,7 @@ export const getOrganizationUserCount = async (organizationId: string): Promise<
   }
 }
 
-export const getAllOrganizationsWithUserCounts = async (): Promise<{ data: Array<Organization & { user_count: number }> | null, error: unknown }> => {
+export const getAllOrganizationsWithUserCounts = async (): Promise<{ data: Array<Organization & { user_count: number; created_at: string }> | null, error: unknown }> => {
   try {
     // Get all organizations
     const { data: organizations, error: orgError } = await supabase
@@ -1132,7 +1132,8 @@ export const getAllOrganizationsWithUserCounts = async (): Promise<{ data: Array
         const { data: userCount } = await getOrganizationUserCount(org.id)
         return {
           ...org,
-          user_count: userCount || 0
+          user_count: userCount || 0,
+          created_at: org.created_at || new Date().toISOString()
         }
       })
     )

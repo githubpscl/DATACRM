@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import DashboardLayout from '@/components/dashboard/layout'
 import SuperAdminGuard from '@/components/admin/super-admin-guard'
@@ -24,9 +23,7 @@ import {
   Plus, 
   Users, 
   Crown,
-  Mail,
   ExternalLink,
-  Phone,
   UserPlus,
   Settings,
   Shield,
@@ -59,7 +56,6 @@ interface OrganizationUser {
 
 export default function OrganizationsPage() {
   const { user, loading: authLoading } = useAuth()
-  const router = useRouter()
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -320,7 +316,7 @@ export default function OrganizationsPage() {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Gesamt Benutzer</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {organizations.reduce((sum, org) => sum + org.user_count, 0)}
+                      {organizations.reduce((sum, org) => sum + (org.user_count ?? 0), 0)}
                     </p>
                   </div>
                 </div>
@@ -393,7 +389,7 @@ export default function OrganizationsPage() {
                     )}
                     
                     <div className="text-sm text-gray-500">
-                      Erstellt: {new Date(org.created_at).toLocaleDateString('de-DE')}
+                      Erstellt: {new Date(org.created_at ?? '').toLocaleDateString('de-DE')}
                     </div>
                   </div>
                   

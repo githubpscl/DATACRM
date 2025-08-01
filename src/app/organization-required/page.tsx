@@ -119,6 +119,7 @@ export default function OrganizationRequiredPage() {
     try {
       const result = await createJoinRequest({
         organization_id: selectedOrg.id,
+        admin_email: 'admin@' + selectedOrg.name.toLowerCase().replace(/\s+/g, '') + '.com',
         message: message.trim() || undefined
       })
 
