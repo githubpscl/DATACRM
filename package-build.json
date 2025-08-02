@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "build-simple": "cross-env NEXT_TELEMETRY_DISABLED=1 CI=true next build",
+    "build-quiet": "next build --experimental-debug"
+  }
+}

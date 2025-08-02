@@ -79,12 +79,13 @@ export const getCurrentUserOrganization = async (): Promise<{ data: Organization
     const rpcPromise = supabase.rpc('get_current_user_organization')
     
     try {
-      const { data, error } = await Promise.race([rpcPromise, timeoutPromise]) as any
+      const result = await Promise.race([rpcPromise, timeoutPromise])
+      const { data, error } = result as { data: Organization[] | null, error: unknown }
       
       console.log('🏢 [SUPABASE] RPC response:', {
         data: data,
         error: error,
-        dataLength: data ? data.length : 0
+        dataLength: data ? (Array.isArray(data) ? data.length : 0) : 0
       })
       
       if (error) {
@@ -93,7 +94,7 @@ export const getCurrentUserOrganization = async (): Promise<{ data: Organization
       }
       
       // Since RPC returns an array, get the first item
-      const organization = data && data.length > 0 ? data[0] : null
+      const organization = data && Array.isArray(data) && data.length > 0 ? data[0] : null
       console.log('🏢 [SUPABASE] Parsed organization:', organization)
       
       return { data: organization, error: null }
