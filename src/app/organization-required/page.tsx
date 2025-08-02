@@ -23,7 +23,6 @@ import {
   ArrowLeft
 } from 'lucide-react'
 import { 
-  getCurrentUserOrganization, 
   getAvailableOrganizationsForJoin,
   createJoinRequest,
   getUserJoinRequests
