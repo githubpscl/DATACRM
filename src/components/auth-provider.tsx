@@ -293,6 +293,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // First check for organization (most users will have one)
           console.log('🏢 [AUTH STATE] Checking organization first...')
           
+          // EINFACHE DIREKTE DATENBANKABFRAGE ZUM DEBUGGING
+          console.log('🔍 [AUTH STATE] Starting simple database check...')
+          const { checkUserOrganizationId, testDatabaseConnection } = await import('@/lib/simple-db-check')
+          
+          // Test basic connection first
+          const isConnected = await testDatabaseConnection()
+          console.log('🔍 [AUTH STATE] Database connection test:', isConnected)
+          
+          // Check user's organization_id directly by email
+          const userCheck = await checkUserOrganizationId(session.user.email || '')
+          console.log('🔍 [AUTH STATE] User organization check complete:', {
+            hasData: !!userCheck.data,
+            organizationId: userCheck.data?.organization_id,
+            error: userCheck.error
+          })
+          
           // Use BYPASS version - temporarily skip organization to get system running
           const { getCurrentUserOrganizationBypass } = await import('@/lib/supabase-bypass')
           let orgResult = await getCurrentUserOrganizationBypass()
