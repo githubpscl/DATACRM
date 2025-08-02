@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Temporarily disable export mode for build testing
-  // output: 'export',
+  // Enable export mode for GitHub Pages deployment
+  output: 'export',
   trailingSlash: true,
   images: {
     unoptimized: true
@@ -9,11 +9,9 @@ const nextConfig = {
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
-  // Exclude backend files from TypeScript compilation
   typescript: {
     ignoreBuildErrors: false,
   },
-  // Exclude backend directory
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
   webpack: (config, { isServer }) => {
     // Ignore backend files during webpack compilation

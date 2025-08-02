@@ -276,7 +276,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => subscription.unsubscribe()
-  }, []) // Remove dependencies to prevent infinite loop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Intentionally empty to prevent infinite loop
 
   // Set up activity tracking and inactivity timer
   useEffect(() => {
