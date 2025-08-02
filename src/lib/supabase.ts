@@ -70,24 +70,81 @@ export const getCurrentUser = async () => {
 export const getCurrentUserOrganization = async (): Promise<{ data: Organization | null, error: unknown }> => {
   try {
     console.log('🏢 [SUPABASE] Calling RPC: get_current_user_organization')
-    const { data, error } = await supabase.rpc('get_current_user_organization')
     
-    console.log('🏢 [SUPABASE] RPC response:', {
-      data: data,
-      error: error,
-      dataLength: data ? data.length : 0
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('RPC timeout after 5 seconds')), 5000)
     })
     
-    if (error) {
-      console.error('❌ [SUPABASE] Error getting current user organization:', error)
-      return { data: null, error }
+    const rpcPromise = supabase.rpc('get_current_user_organization')
+    
+    try {
+      const { data, error } = await Promise.race([rpcPromise, timeoutPromise]) as any
+      
+      console.log('🏢 [SUPABASE] RPC response:', {
+        data: data,
+        error: error,
+        dataLength: data ? data.length : 0
+      })
+      
+      if (error) {
+        console.error('❌ [SUPABASE] RPC error, falling back to direct query:', error)
+        throw error
+      }
+      
+      // Since RPC returns an array, get the first item
+      const organization = data && data.length > 0 ? data[0] : null
+      console.log('🏢 [SUPABASE] Parsed organization:', organization)
+      
+      return { data: organization, error: null }
+      
+    } catch (rpcError) {
+      console.warn('⚠️ [SUPABASE] RPC failed, using fallback direct query:', rpcError)
+      
+      // Fallback: Direct table query
+      const { data: currentUser } = await supabase.auth.getUser()
+      if (!currentUser?.user?.id) {
+        console.error('❌ [SUPABASE] No authenticated user for fallback query')
+        return { data: null, error: 'No authenticated user' }
+      }
+      
+      console.log('🔄 [SUPABASE] Fallback: Querying users + organizations tables directly')
+      
+      const { data: userWithOrg, error: fallbackError } = await supabase
+        .from('users')
+        .select(`
+          organization_id,
+          organizations:organization_id (
+            id,
+            name,
+            slug,
+            email,
+            domain,
+            subscription_plan,
+            is_active
+          )
+        `)
+        .eq('id', currentUser.user.id)
+        .eq('is_active', true)
+        .single()
+      
+      console.log('🔄 [SUPABASE] Fallback query result:', {
+        data: userWithOrg,
+        error: fallbackError
+      })
+      
+      if (fallbackError) {
+        console.error('❌ [SUPABASE] Fallback query failed:', fallbackError)
+        return { data: null, error: fallbackError }
+      }
+      
+      const organization = Array.isArray(userWithOrg?.organizations)
+        ? (userWithOrg.organizations[0] as Organization | null)
+        : (userWithOrg?.organizations as Organization | null)
+      console.log('🏢 [SUPABASE] Fallback organization result:', organization)
+      
+      return { data: organization, error: null }
     }
-    
-    // Since RPC returns an array, get the first item
-    const organization = data && data.length > 0 ? data[0] : null
-    console.log('🏢 [SUPABASE] Parsed organization:', organization)
-    
-    return { data: organization, error: null }
   } catch (error) {
     console.error('❌ [SUPABASE] Exception in getCurrentUserOrganization:', error)
     return { data: null, error }
