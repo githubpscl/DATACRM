@@ -77,9 +77,12 @@ export default function OrganizationRequiredPage() {
 
       try {
         // Prüfen ob Benutzer bereits einer Organisation angehört
-        const userOrg = await getCurrentUserOrganization()
-        if (userOrg.data?.id) {
+        // Use organization from auth context instead of API call
+        const hasOrganization = user.role === 'super_admin' || (user.organizationId && user.organization?.id)
+        
+        if (hasOrganization) {
           // Benutzer hat bereits eine Organisation, weiterleiten
+          console.log('User already has organization, redirecting to dashboard')
           router.push('/dashboard')
           return
         }

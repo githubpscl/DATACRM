@@ -3,7 +3,6 @@
 import { useAuth } from '@/components/auth-provider'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { getCurrentUserOrganization } from '@/lib/supabase'
 
 interface OrganizationGuardProps {
   children: React.ReactNode
@@ -16,7 +15,7 @@ export default function OrganizationGuard({ children }: OrganizationGuardProps) 
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    const checkOrganization = async () => {
+    const checkOrganization = () => {
       if (loading) return
 
       if (!user) {
@@ -26,9 +25,11 @@ export default function OrganizationGuard({ children }: OrganizationGuardProps) 
 
       try {
         console.log('OrganizationGuard: Checking organization for', user.email)
-        const result = await getCurrentUserOrganization()
+        console.log('OrganizationGuard: User object:', user)
         
-        const hasOrg = result.data?.id !== null
+        // Check if user has organization from the auth context
+        // Super admin always has access, regular users need organizationId
+        const hasOrg = user.role === 'super_admin' || (user.organizationId && user.organization?.id)
         console.log('OrganizationGuard: Has organization:', hasOrg)
         
         if (!hasOrg) {
