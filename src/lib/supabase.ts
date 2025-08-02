@@ -69,18 +69,27 @@ export const getCurrentUser = async () => {
 // Organization helpers
 export const getCurrentUserOrganization = async (): Promise<{ data: Organization | null, error: unknown }> => {
   try {
+    console.log('🏢 [SUPABASE] Calling RPC: get_current_user_organization')
     const { data, error } = await supabase.rpc('get_current_user_organization')
     
+    console.log('🏢 [SUPABASE] RPC response:', {
+      data: data,
+      error: error,
+      dataLength: data ? data.length : 0
+    })
+    
     if (error) {
-      console.error('Error getting current user organization:', error)
+      console.error('❌ [SUPABASE] Error getting current user organization:', error)
       return { data: null, error }
     }
     
     // Since RPC returns an array, get the first item
     const organization = data && data.length > 0 ? data[0] : null
+    console.log('🏢 [SUPABASE] Parsed organization:', organization)
+    
     return { data: organization, error: null }
   } catch (error) {
-    console.error('Error in getCurrentUserOrganization:', error)
+    console.error('❌ [SUPABASE] Exception in getCurrentUserOrganization:', error)
     return { data: null, error }
   }
 }

@@ -190,24 +190,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Check initial auth state
     const initializeAuth = async () => {
       try {
+        console.log('🚀 [AUTH INIT] Starting authentication initialization')
+        
         // First try to load from localStorage
         const sessionLoaded = loadSession()
+        console.log(`💾 [AUTH INIT] LocalStorage session loaded: ${sessionLoaded}`)
         
         if (!sessionLoaded) {
           // Fallback to Supabase session check
+          console.log('🔍 [AUTH INIT] Checking Supabase session...')
           const { data: { session } } = await supabase.auth.getSession()
+          console.log('🔍 [AUTH INIT] Supabase session result:', {
+            hasSession: !!session,
+            hasUser: !!session?.user,
+            userEmail: session?.user?.email
+          })
+          
           if (session?.user) {
             // Load user's organization and check admin status
             const { getCurrentUserOrganization, isSuperAdmin } = await import('@/lib/supabase')
             
             // Check if user is super admin first
+            console.log('👑 [AUTH INIT] Checking super admin status...')
             const isSuper = await isSuperAdmin(session.user.email || '')
+            console.log(`👑 [AUTH INIT] Super admin result: ${isSuper}`)
             
             let organization = null
             let userRole = 'user'
             
             if (isSuper) {
               // Super admin gets system organization and super_admin role
+              console.log('👑 [AUTH INIT] Setting up super admin user')
               userRole = 'super_admin'
               organization = {
                 id: 'system',
@@ -215,12 +228,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             } else {
               // Regular user - check for organization
-              const { data: orgData } = await getCurrentUserOrganization()
-              organization = orgData
+              console.log('🏢 [AUTH INIT] Checking organization for regular user...')
+              const orgResult = await getCurrentUserOrganization()
+              console.log('🏢 [AUTH INIT] Organization result:', {
+                data: orgResult.data,
+                error: orgResult.error
+              })
+              
+              organization = orgResult.data
               
               if (organization) {
                 // User has organization - set role to admin
+                console.log('✅ [AUTH INIT] User has organization, setting admin role')
                 userRole = 'admin'
+              } else {
+                console.log('❌ [AUTH INIT] User has no organization')
               }
               // If no organization, role stays 'user'
             }
@@ -238,14 +260,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 subscription_plan: organization.subscription_plan
               } : undefined
             }
+            
+            console.log('👤 [AUTH INIT] Final user data set:', userData)
             setUser(userData)
             setToken(session.access_token)
             saveSession(userData, session.access_token)
+          } else {
+            console.log('❌ [AUTH INIT] No valid session found')
           }
         }
       } catch (error) {
-        console.error('Error initializing auth:', error)
+        console.error('❌ [AUTH INIT] Error initializing auth:', error)
       } finally {
+        console.log('✅ [AUTH INIT] Authentication initialization complete')
         setLoading(false)
       }
     }
@@ -255,18 +282,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes from Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log(`🔄 [AUTH STATE] Auth state changed - Event: ${event}`)
+        console.log('🔄 [AUTH STATE] Session data:', {
+          hasSession: !!session,
+          hasUser: !!session?.user,
+          userEmail: session?.user?.email
+        })
+        
         if (session?.user) {
           // Load user's organization and check admin status for all users
           const { getCurrentUserOrganization, isSuperAdmin } = await import('@/lib/supabase')
           
           // Check if user is super admin first
+          console.log('👑 [AUTH STATE] Checking super admin status...')
           const isSuper = await isSuperAdmin(session.user.email || '')
+          console.log(`👑 [AUTH STATE] Super admin result: ${isSuper}`)
           
           let organization = null
           let userRole = 'user'
           
           if (isSuper) {
             // Super admin gets system organization and super_admin role
+            console.log('👑 [AUTH STATE] Setting up super admin user')
             userRole = 'super_admin'
             organization = {
               id: 'system',
@@ -274,12 +311,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           } else {
             // Regular user - check for organization
-            const { data: orgData } = await getCurrentUserOrganization()
-            organization = orgData
+            console.log('🏢 [AUTH STATE] Checking organization for regular user...')
+            const orgResult = await getCurrentUserOrganization()
+            console.log('🏢 [AUTH STATE] Organization result:', {
+              data: orgResult.data,
+              error: orgResult.error
+            })
+            
+            organization = orgResult.data
             
             if (organization) {
               // User has organization - set role to admin
+              console.log('✅ [AUTH STATE] User has organization, setting admin role')
               userRole = 'admin'
+            } else {
+              console.log('❌ [AUTH STATE] User has no organization')
             }
             // If no organization, role stays 'user'
           }
@@ -297,10 +343,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               subscription_plan: organization.subscription_plan
             } : undefined
           }
+          
+          console.log('👤 [AUTH STATE] Final user data set:', userData)
           setUser(userData)
           setToken(session.access_token)
           saveSession(userData, session.access_token)
         } else {
+          console.log('❌ [AUTH STATE] No session, clearing user data')
           setUser(null)
           setToken(null)
           clearSession()
@@ -351,6 +400,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // For demo purposes - keep these test users for development
       // TODO: Remove these in production
       if (email === 'noorg@example.com') {
+        console.log('🎭 [AUTH] Mock user login: noorg@example.com')
         const mockUser: User = {
           id: 'no-org-user-id',
           email: 'noorg@example.com',
@@ -362,11 +412,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(mockUser)
         setToken('no-org-token')
         saveSession(mockUser, 'no-org-token')
+        console.log('🎭 [AUTH] Mock user set, redirecting to organization-required')
         router.push('/organization-required')
         return
       }
       
       if (email === 'demo@example.com') {
+        console.log('🎭 [AUTH] Mock user login: demo@example.com')
         const mockUser: User = {
           id: 'demo-user-id',
           email: 'demo@example.com',
@@ -382,26 +434,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(mockUser)
         setToken('demo-token')
         saveSession(mockUser, 'demo-token')
+        console.log('🎭 [AUTH] Mock user set with organization:', mockUser.organization)
         router.push('/dashboard')
         return
       }
 
       // For all users (including real Supabase users), use generalized logic
+      console.log('🔐 [AUTH] Starting Supabase login for:', email)
       const { data, error } = await signIn(email, password)
-      if (error) throw error
+      if (error) {
+        console.error('❌ [AUTH] Supabase login error:', error)
+        throw error
+      }
+
+      console.log('✅ [AUTH] Supabase login successful:', {
+        userId: data.user?.id,
+        email: data.user?.email,
+        hasSession: !!data.session
+      })
 
       if (data.user) {
         // Load user's organization and check admin status
         const { getCurrentUserOrganization, isSuperAdmin } = await import('@/lib/supabase')
         
         // Check if user is super admin first
+        console.log('🔍 [AUTH] Checking if user is super admin...')
         const isSuper = await isSuperAdmin(data.user.email || '')
+        console.log(`🔍 [AUTH] Super admin check result: ${isSuper}`)
         
         let organization = null
         let userRole = 'user'
         
         if (isSuper) {
           // Super admin gets system organization and super_admin role
+          console.log('👑 [AUTH] User is super admin, setting system organization')
           userRole = 'super_admin'
           organization = {
             id: 'system',
@@ -409,12 +475,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else {
           // Regular user - check for organization
-          const { data: orgData } = await getCurrentUserOrganization()
-          organization = orgData
+          console.log('🏢 [AUTH] Checking user organization...')
+          const orgResult = await getCurrentUserOrganization()
+          console.log('🏢 [AUTH] Organization query result:', {
+            data: orgResult.data,
+            error: orgResult.error
+          })
+          
+          organization = orgResult.data
           
           if (organization) {
             // User has organization - set role to admin
+            console.log('✅ [AUTH] User has organization, setting admin role:', organization)
             userRole = 'admin'
+          } else {
+            console.log('❌ [AUTH] User has no organization, keeping user role')
           }
           // If no organization, role stays 'user'
         }
@@ -433,6 +508,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } : undefined
         }
         
+        console.log('👤 [AUTH] Final user data:', userData)
+        
         setUser(userData)
         setToken(data.session?.access_token || null)
         if (data.session?.access_token) {
@@ -442,17 +519,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Route user based on their status
         if (isSuper) {
           // Super admin goes to admin dashboard
+          console.log('🚀 [AUTH] Redirecting super admin to dashboard')
           router.push('/dashboard')
         } else if (organization) {
           // User with organization goes to dashboard
+          console.log('🚀 [AUTH] Redirecting user with organization to dashboard')
           router.push('/dashboard')
         } else {
           // User without organization goes to organization-required page
+          console.log('🚀 [AUTH] Redirecting user without organization to organization-required')
           router.push('/organization-required')
         }
       }
     } catch (error: unknown) {
-      console.error('Login error:', error)
+      console.error('❌ [AUTH] Login error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Login failed'
       throw new Error(errorMessage)
     } finally {

@@ -16,34 +16,50 @@ export default function OrganizationGuard({ children }: OrganizationGuardProps) 
 
   useEffect(() => {
     const checkOrganization = () => {
-      if (loading) return
+      if (loading) {
+        console.log('🛡️ [ORG GUARD] Auth still loading, waiting...')
+        return
+      }
 
       if (!user) {
+        console.log('❌ [ORG GUARD] No user found, redirecting to login')
         router.push('/login')
         return
       }
 
       try {
-        console.log('OrganizationGuard: Checking organization for', user.email)
-        console.log('OrganizationGuard: User object:', user)
+        console.log('🛡️ [ORG GUARD] Checking organization for user:', user.email)
+        console.log('🛡️ [ORG GUARD] User object:', {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          organizationId: user.organizationId,
+          organization: user.organization
+        })
         
         // Check if user has organization from the auth context
         // Super admin always has access, regular users need organizationId
         const hasOrg = user.role === 'super_admin' || (user.organizationId && user.organization?.id)
-        console.log('OrganizationGuard: Has organization:', hasOrg)
+        console.log('🛡️ [ORG GUARD] Organization check result:', {
+          isSuperAdmin: user.role === 'super_admin',
+          hasOrganizationId: !!user.organizationId,
+          hasOrganizationObject: !!user.organization?.id,
+          finalResult: hasOrg
+        })
         
         if (!hasOrg) {
-          console.log('OrganizationGuard: No organization, redirecting to organization-required')
+          console.log('❌ [ORG GUARD] No organization access, redirecting to organization-required')
           router.push('/organization-required')
           return
         }
 
-        console.log('OrganizationGuard: Organization check passed')
+        console.log('✅ [ORG GUARD] Organization check passed, allowing access')
         setHasOrganization(true)
       } catch (error) {
-        console.error('OrganizationGuard: Error checking organization:', error)
+        console.error('❌ [ORG GUARD] Error checking organization:', error)
         router.push('/organization-required')
       } finally {
+        console.log('🛡️ [ORG GUARD] Check complete, setting checking to false')
         setChecking(false)
       }
     }
