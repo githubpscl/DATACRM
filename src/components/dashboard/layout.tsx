@@ -160,24 +160,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [pathname, user, resetInactivityTimer])
 
-  // Check user permissions
+  // Set user permissions from user object
   useEffect(() => {
-    const checkPermissions = async () => {
-      if (!user?.email) {
-        return
-      }
-
-      try {
-        // Get super admin status from user object (already loaded in AuthProvider)
-        const isSuperAdminUser = user.role === 'super_admin'
-        setIsSuper(isSuperAdminUser)
-        setUserRole(user.role)
-      } catch (error) {
-        console.error('Error checking permissions:', error)
-      }
+    if (user) {
+      const isSuperAdminUser = user.role === 'super_admin'
+      setIsSuper(isSuperAdminUser)
+      setUserRole(user.role)
     }
-
-    checkPermissions()
   }, [user])
 
   // Show loading while authentication is being checked
@@ -198,19 +187,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   // Redirect to organization-required if user has no organization (except super admin)
+  // Use user.role directly instead of isSuper state to avoid timing issues
   if (user.role !== 'super_admin' && !user.organization?.id) {
     router.push('/organization-required')
     return null
   }
 
-  // Wähle Navigation basierend auf Benutzerrolle
-  const currentNavigation = isSuper ? superAdminNavigation : navigation
+  // Wähle Navigation basierend auf Benutzerrolle (use user.role directly)
+  const isSuperAdminUser = user.role === 'super_admin'
+  const currentNavigation = isSuperAdminUser ? superAdminNavigation : navigation
   
   // Filter navigation based on permissions
   const filteredNavigation = currentNavigation.filter(item => {
     if (item.name === 'Administration') {
       // Only show admin section to super admins and organization admins
-      return isSuper || userRole === 'organization_admin'
+      return isSuperAdminUser || userRole === 'organization_admin'
     }
     return true
   })
