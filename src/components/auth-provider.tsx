@@ -295,11 +295,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           // First check for organization (most users will have one)
           console.log('🏢 [AUTH STATE] Checking organization first...')
-          const orgResult = await getCurrentUserOrganization()
+          
+          // Add comprehensive debug
+          const { debugDatabase } = await import('@/lib/supabase-debug')
+          await debugDatabase()
+          
+          let orgResult = await getCurrentUserOrganization()
           console.log('🏢 [AUTH STATE] Organization result:', {
             data: orgResult.data,
             error: orgResult.error
           })
+          
+          // If main method fails, try simple fallback
+          if (orgResult.error || !orgResult.data) {
+            console.log('🔄 [AUTH STATE] Main method failed, trying simple fallback...')
+            const { getOrganizationSimple } = await import('@/lib/supabase-simple')
+            const simpleResult = await getOrganizationSimple()
+            console.log('🔄 [AUTH STATE] Simple fallback result:', {
+              data: simpleResult.data,
+              error: simpleResult.error
+            })
+            
+            if (simpleResult.data && !simpleResult.error) {
+              orgResult = simpleResult
+            }
+          }
           
           let organization = orgResult.data
           let userRole = 'user'
@@ -457,11 +477,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Check user's organization first
         console.log('🏢 [AUTH] Checking user organization...')
-        const orgResult = await getCurrentUserOrganization()
+        let orgResult = await getCurrentUserOrganization()
         console.log('🏢 [AUTH] Organization query result:', {
           data: orgResult.data,
           error: orgResult.error
         })
+        
+        // If main method fails, try simple fallback
+        if (orgResult.error || !orgResult.data) {
+          console.log('🔄 [AUTH] Main method failed, trying simple fallback...')
+          const { getOrganizationSimple } = await import('@/lib/supabase-simple')
+          const simpleResult = await getOrganizationSimple()
+          console.log('🔄 [AUTH] Simple fallback result:', {
+            data: simpleResult.data,
+            error: simpleResult.error
+          })
+          
+          if (simpleResult.data && !simpleResult.error) {
+            orgResult = simpleResult
+          }
+        }
         
         let organization = orgResult.data
         let userRole = 'user'

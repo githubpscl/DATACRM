@@ -69,83 +69,76 @@ export const getCurrentUser = async () => {
 // Organization helpers
 export const getCurrentUserOrganization = async (): Promise<{ data: Organization | null, error: unknown }> => {
   try {
-    console.log('🏢 [SUPABASE] Calling RPC: get_current_user_organization')
+    console.log('🏢 [SUPABASE] Starting organization query...')
     
-    // Add timeout to prevent hanging
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('RPC timeout after 5 seconds')), 5000)
+    // Skip RPC entirely and go directly to table query
+    console.log('🔄 [SUPABASE] Using direct table query (RPC bypassed)')
+    
+    // Get current user first
+    const { data: currentUser } = await supabase.auth.getUser()
+    if (!currentUser?.user?.id) {
+      console.error('❌ [SUPABASE] No authenticated user')
+      return { data: null, error: 'No authenticated user' }
+    }
+    
+    console.log('� [SUPABASE] Current user ID:', currentUser.user.id)
+    
+    // Direct query: Get user and their organization
+    const { data: userWithOrg, error: queryError } = await supabase
+      .from('users')
+      .select(`
+        organization_id,
+        organizations:organization_id (
+          id,
+          name,
+          email,
+          subscription_plan,
+          is_active
+        )
+      `)
+      .eq('id', currentUser.user.id)
+      .eq('is_active', true)
+      .maybeSingle()
+    
+    console.log('🔄 [SUPABASE] Direct query result:', {
+      data: userWithOrg,
+      error: queryError,
+      hasUser: !!userWithOrg,
+      hasOrganization: !!userWithOrg?.organizations
     })
     
-    const rpcPromise = supabase.rpc('get_current_user_organization')
-    
-    try {
-      const result = await Promise.race([rpcPromise, timeoutPromise])
-      const { data, error } = result as { data: Organization[] | null, error: unknown }
-      
-      console.log('🏢 [SUPABASE] RPC response:', {
-        data: data,
-        error: error,
-        dataLength: data ? (Array.isArray(data) ? data.length : 0) : 0
-      })
-      
-      if (error) {
-        console.error('❌ [SUPABASE] RPC error, falling back to direct query:', error)
-        throw error
-      }
-      
-      // Since RPC returns an array, get the first item
-      const organization = data && Array.isArray(data) && data.length > 0 ? data[0] : null
-      console.log('🏢 [SUPABASE] Parsed organization:', organization)
-      
-      return { data: organization, error: null }
-      
-    } catch (rpcError) {
-      console.warn('⚠️ [SUPABASE] RPC failed, using fallback direct query:', rpcError)
-      
-      // Fallback: Direct table query
-      const { data: currentUser } = await supabase.auth.getUser()
-      if (!currentUser?.user?.id) {
-        console.error('❌ [SUPABASE] No authenticated user for fallback query')
-        return { data: null, error: 'No authenticated user' }
-      }
-      
-      console.log('🔄 [SUPABASE] Fallback: Querying users + organizations tables directly')
-      
-      const { data: userWithOrg, error: fallbackError } = await supabase
-        .from('users')
-        .select(`
-          organization_id,
-          organizations:organization_id (
-            id,
-            name,
-            slug,
-            email,
-            domain,
-            subscription_plan,
-            is_active
-          )
-        `)
-        .eq('id', currentUser.user.id)
-        .eq('is_active', true)
-        .single()
-      
-      console.log('🔄 [SUPABASE] Fallback query result:', {
-        data: userWithOrg,
-        error: fallbackError
-      })
-      
-      if (fallbackError) {
-        console.error('❌ [SUPABASE] Fallback query failed:', fallbackError)
-        return { data: null, error: fallbackError }
-      }
-      
-      const organization = Array.isArray(userWithOrg?.organizations)
-        ? (userWithOrg.organizations[0] as Organization | null)
-        : (userWithOrg?.organizations as Organization | null)
-      console.log('🏢 [SUPABASE] Fallback organization result:', organization)
-      
-      return { data: organization, error: null }
+    if (queryError) {
+      console.error('❌ [SUPABASE] Direct query failed:', queryError)
+      return { data: null, error: queryError }
     }
+    
+    if (!userWithOrg) {
+      console.log('❌ [SUPABASE] User not found in users table')
+      return { data: null, error: 'User not found in database' }
+    }
+    
+    // Parse organization from result
+    let organization: Organization | null = null
+    
+    if (userWithOrg.organizations) {
+      const orgData = Array.isArray(userWithOrg.organizations) 
+        ? userWithOrg.organizations[0] 
+        : userWithOrg.organizations
+      
+      if (orgData) {
+        organization = {
+          id: orgData.id,
+          name: orgData.name,
+          subscription_plan: orgData.subscription_plan,
+          is_active: orgData.is_active
+        } as Organization
+      }
+    }
+    
+    console.log('🏢 [SUPABASE] Final organization result:', organization)
+    
+    return { data: organization, error: null }
+    
   } catch (error) {
     console.error('❌ [SUPABASE] Exception in getCurrentUserOrganization:', error)
     return { data: null, error }
