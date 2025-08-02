@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable export mode for GitHub Pages deployment
+  output: 'export',
   // Simple configuration for testing builds
   trailingSlash: true,
   images: {
