@@ -207,12 +207,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           })
           
           if (session?.user) {
-            // Load user's organization and check admin status
-            const { getCurrentUserOrganization, isSuperAdmin } = await import('@/lib/supabase')
+            // Load user's organization using bypass version
+            const { getCurrentUserOrganizationBypass, checkSuperAdminBypass } = await import('@/lib/supabase-bypass')
             
-            // Check if user is super admin first
+            // Check if user is super admin first using bypass
             console.log('👑 [AUTH INIT] Checking super admin status...')
-            const isSuper = await isSuperAdmin(session.user.email || '')
+            const isSuper = await checkSuperAdminBypass(session.user.id)
             console.log(`👑 [AUTH INIT] Super admin result: ${isSuper}`)
             
             let organization = null
@@ -229,7 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } else {
               // Regular user - check for organization
               console.log('🏢 [AUTH INIT] Checking organization for regular user...')
-              const orgResult = await getCurrentUserOrganization()
+              const orgResult = await getCurrentUserOrganizationBypass()
               console.log('🏢 [AUTH INIT] Organization result:', {
                 data: orgResult.data,
                 error: orgResult.error
@@ -290,36 +290,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
         
         if (session?.user) {
-          // Load user's organization and check admin status for all users
-          const { getCurrentUserOrganization, isSuperAdmin } = await import('@/lib/supabase')
-          
           // First check for organization (most users will have one)
           console.log('🏢 [AUTH STATE] Checking organization first...')
           
-          // Add comprehensive debug
-          const { debugDatabase } = await import('@/lib/supabase-debug')
-          await debugDatabase()
-          
-          let orgResult = await getCurrentUserOrganization()
-          console.log('🏢 [AUTH STATE] Organization result:', {
+          // Use BYPASS version - temporarily skip organization to get system running
+          const { getCurrentUserOrganizationBypass } = await import('@/lib/supabase-bypass')
+          let orgResult = await getCurrentUserOrganizationBypass()
+          console.log('🏢 [AUTH STATE] Organization result (bypass mode):', {
             data: orgResult.data,
             error: orgResult.error
           })
-          
-          // If main method fails, try simple fallback
-          if (orgResult.error || !orgResult.data) {
-            console.log('🔄 [AUTH STATE] Main method failed, trying simple fallback...')
-            const { getOrganizationSimple } = await import('@/lib/supabase-simple')
-            const simpleResult = await getOrganizationSimple()
-            console.log('🔄 [AUTH STATE] Simple fallback result:', {
-              data: simpleResult.data,
-              error: simpleResult.error
-            })
-            
-            if (simpleResult.data && !simpleResult.error) {
-              orgResult = simpleResult
-            }
-          }
           
           let organization = orgResult.data
           let userRole = 'user'
@@ -329,9 +309,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log('✅ [AUTH STATE] User has organization, setting admin role')
             userRole = 'admin'
           } else {
-            // No organization found - check if user is super admin
+            // No organization found - check if user is super admin with bypass version
             console.log('❌ [AUTH STATE] User has no organization, checking super admin status...')
-            const isSuper = await isSuperAdmin(session.user.email || '')
+            const { checkSuperAdminBypass } = await import('@/lib/supabase-bypass')
+            const isSuper = await checkSuperAdminBypass(session.user.id)
             console.log(`👑 [AUTH STATE] Super admin result: ${isSuper}`)
             
             if (isSuper) {
@@ -472,31 +453,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (data.user) {
-        // Load user's organization first (most efficient for regular users)
-        const { getCurrentUserOrganization, isSuperAdmin } = await import('@/lib/supabase')
-        
         // Check user's organization first
-        console.log('🏢 [AUTH] Checking user organization...')
-        let orgResult = await getCurrentUserOrganization()
-        console.log('🏢 [AUTH] Organization query result:', {
+        // Use BYPASS version - temporarily skip organization to get system running
+        const { getCurrentUserOrganizationBypass } = await import('@/lib/supabase-bypass')
+        let orgResult = await getCurrentUserOrganizationBypass()
+        console.log('🏢 [AUTH] Organization query result (bypass mode):', {
           data: orgResult.data,
           error: orgResult.error
         })
-        
-        // If main method fails, try simple fallback
-        if (orgResult.error || !orgResult.data) {
-          console.log('🔄 [AUTH] Main method failed, trying simple fallback...')
-          const { getOrganizationSimple } = await import('@/lib/supabase-simple')
-          const simpleResult = await getOrganizationSimple()
-          console.log('🔄 [AUTH] Simple fallback result:', {
-            data: simpleResult.data,
-            error: simpleResult.error
-          })
-          
-          if (simpleResult.data && !simpleResult.error) {
-            orgResult = simpleResult
-          }
-        }
         
         let organization = orgResult.data
         let userRole = 'user'
@@ -506,9 +470,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('✅ [AUTH] User has organization, setting admin role:', organization)
           userRole = 'admin'
         } else {
-          // No organization found - check if user is super admin
+          // No organization found - check if user is super admin with bypass version
           console.log('❌ [AUTH] User has no organization, checking if user is super admin...')
-          const isSuper = await isSuperAdmin(data.user.email || '')
+          const { checkSuperAdminBypass } = await import('@/lib/supabase-bypass')
+          const isSuper = await checkSuperAdminBypass(data.user.id)
           console.log(`🔍 [AUTH] Super admin check result: ${isSuper}`)
           
           if (isSuper) {
