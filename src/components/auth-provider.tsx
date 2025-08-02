@@ -293,41 +293,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Load user's organization and check admin status for all users
           const { getCurrentUserOrganization, isSuperAdmin } = await import('@/lib/supabase')
           
-          // Check if user is super admin first
-          console.log('👑 [AUTH STATE] Checking super admin status...')
-          const isSuper = await isSuperAdmin(session.user.email || '')
-          console.log(`👑 [AUTH STATE] Super admin result: ${isSuper}`)
+          // First check for organization (most users will have one)
+          console.log('🏢 [AUTH STATE] Checking organization first...')
+          const orgResult = await getCurrentUserOrganization()
+          console.log('🏢 [AUTH STATE] Organization result:', {
+            data: orgResult.data,
+            error: orgResult.error
+          })
           
-          let organization = null
+          let organization = orgResult.data
           let userRole = 'user'
           
-          if (isSuper) {
-            // Super admin gets system organization and super_admin role
-            console.log('👑 [AUTH STATE] Setting up super admin user')
-            userRole = 'super_admin'
-            organization = {
-              id: 'system',
-              name: 'System Administration'
-            }
+          if (organization) {
+            // User has organization - set role to admin
+            console.log('✅ [AUTH STATE] User has organization, setting admin role')
+            userRole = 'admin'
           } else {
-            // Regular user - check for organization
-            console.log('🏢 [AUTH STATE] Checking organization for regular user...')
-            const orgResult = await getCurrentUserOrganization()
-            console.log('🏢 [AUTH STATE] Organization result:', {
-              data: orgResult.data,
-              error: orgResult.error
-            })
+            // No organization found - check if user is super admin
+            console.log('❌ [AUTH STATE] User has no organization, checking super admin status...')
+            const isSuper = await isSuperAdmin(session.user.email || '')
+            console.log(`👑 [AUTH STATE] Super admin result: ${isSuper}`)
             
-            organization = orgResult.data
-            
-            if (organization) {
-              // User has organization - set role to admin
-              console.log('✅ [AUTH STATE] User has organization, setting admin role')
-              userRole = 'admin'
+            if (isSuper) {
+              // Super admin gets system organization and super_admin role
+              console.log('👑 [AUTH STATE] Setting up super admin user')
+              userRole = 'super_admin'
+              organization = {
+                id: 'system',
+                name: 'System Administration',
+                is_active: true
+              }
             } else {
-              console.log('❌ [AUTH STATE] User has no organization')
+              console.log('❌ [AUTH STATE] User has no organization and is not super admin')
             }
-            // If no organization, role stays 'user'
           }
 
           const userData: User = {
@@ -454,44 +452,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (data.user) {
-        // Load user's organization and check admin status
+        // Load user's organization first (most efficient for regular users)
         const { getCurrentUserOrganization, isSuperAdmin } = await import('@/lib/supabase')
         
-        // Check if user is super admin first
-        console.log('🔍 [AUTH] Checking if user is super admin...')
-        const isSuper = await isSuperAdmin(data.user.email || '')
-        console.log(`🔍 [AUTH] Super admin check result: ${isSuper}`)
+        // Check user's organization first
+        console.log('🏢 [AUTH] Checking user organization...')
+        const orgResult = await getCurrentUserOrganization()
+        console.log('🏢 [AUTH] Organization query result:', {
+          data: orgResult.data,
+          error: orgResult.error
+        })
         
-        let organization = null
+        let organization = orgResult.data
         let userRole = 'user'
         
-        if (isSuper) {
-          // Super admin gets system organization and super_admin role
-          console.log('👑 [AUTH] User is super admin, setting system organization')
-          userRole = 'super_admin'
-          organization = {
-            id: 'system',
-            name: 'System Administration'
-          }
+        if (organization) {
+          // User has organization - set role to admin
+          console.log('✅ [AUTH] User has organization, setting admin role:', organization)
+          userRole = 'admin'
         } else {
-          // Regular user - check for organization
-          console.log('🏢 [AUTH] Checking user organization...')
-          const orgResult = await getCurrentUserOrganization()
-          console.log('🏢 [AUTH] Organization query result:', {
-            data: orgResult.data,
-            error: orgResult.error
-          })
+          // No organization found - check if user is super admin
+          console.log('❌ [AUTH] User has no organization, checking if user is super admin...')
+          const isSuper = await isSuperAdmin(data.user.email || '')
+          console.log(`🔍 [AUTH] Super admin check result: ${isSuper}`)
           
-          organization = orgResult.data
-          
-          if (organization) {
-            // User has organization - set role to admin
-            console.log('✅ [AUTH] User has organization, setting admin role:', organization)
-            userRole = 'admin'
+          if (isSuper) {
+            // Super admin gets system organization and super_admin role
+            console.log('👑 [AUTH] User is super admin, setting system organization')
+            userRole = 'super_admin'
+            organization = {
+              id: 'system',
+              name: 'System Administration',
+              is_active: true
+            }
           } else {
-            console.log('❌ [AUTH] User has no organization, keeping user role')
+            console.log('❌ [AUTH] User has no organization and is not super admin, keeping user role')
           }
-          // If no organization, role stays 'user'
         }
 
         const userData: User = {
@@ -517,7 +513,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         
         // Route user based on their status
-        if (isSuper) {
+        if (userRole === 'super_admin') {
           // Super admin goes to admin dashboard
           console.log('🚀 [AUTH] Redirecting super admin to dashboard')
           router.push('/dashboard')
