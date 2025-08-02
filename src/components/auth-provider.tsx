@@ -163,11 +163,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set new timer
     inactivityTimerRef.current = setTimeout(() => {
       console.log('Session expired due to inactivity')
-      // Call logout function directly
-      logout()
+      // Force logout without calling the function to avoid circular dependency
+      clearSession()
+      setUser(null)
+      setToken(null)
+      window.location.href = '/login'
     }, SESSION_TIMEOUT)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [updateLastActivity])
+  }, [updateLastActivity, clearSession])
 
   // Check session validity periodically  
   const checkSessionValidity = useCallback(() => {
@@ -176,11 +178,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     if (user && now - lastActivity > SESSION_TIMEOUT) {
       console.log('Session expired during validity check')
-      // Call logout function directly
-      logout()
+      // Force logout without calling the function to avoid circular dependency
+      clearSession()
+      setUser(null)
+      setToken(null)
+      window.location.href = '/login'
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
+  }, [user, clearSession])
 
   useEffect(() => {
     // Check initial auth state
@@ -272,7 +276,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => subscription.unsubscribe()
-  }, [loadSession, saveSession, clearSession])
+  }, []) // Remove dependencies to prevent infinite loop
 
   // Set up activity tracking and inactivity timer
   useEffect(() => {

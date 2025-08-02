@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Temporarily disable export mode for build testing
+  // Remove export mode for development builds
   // output: 'export',
   trailingSlash: true,
   images: {
@@ -30,8 +30,13 @@ const nextConfig = {
         tls: false,
       };
     }
+
     return config;
   },
-};
+  experimental: {
+    // Disable some experimental features that might cause issues
+    appDir: true,
+  },
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig

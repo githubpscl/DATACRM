@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
 
 // Dynamically determine the correct redirect URL
 const getRedirectUrl = () => {
@@ -16,7 +16,13 @@ const getRedirectUrl = () => {
   return 'https://githubpscl.github.io/DATACRM'
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Create Supabase client with error handling for build time
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: typeof window !== 'undefined', // Only persist session in browser
+    autoRefreshToken: typeof window !== 'undefined', // Only auto-refresh in browser
+  }
+})
 
 // Types for organization data
 export interface Organization {

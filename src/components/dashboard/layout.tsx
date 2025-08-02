@@ -144,7 +144,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
   const { user, loading, resetInactivityTimer } = useAuth()
   const [userRole, setUserRole] = useState<string | null>(null)
-  const [isSuper, setIsSuper] = useState(false)
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -163,8 +162,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Set user permissions from user object
   useEffect(() => {
     if (user) {
-      const isSuperAdminUser = user.role === 'super_admin'
-      setIsSuper(isSuperAdminUser)
       setUserRole(user.role)
     }
   }, [user])
